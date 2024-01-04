@@ -1,0 +1,115 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-login-server"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-login-server"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: login-server
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 6900
+          command:
+            - /opt/rathena/login-server
+          volumeMounts:
+            - name: "{{ .Release.Name }}-conf-import"
+              mountPath: /opt/rathena/conf/import
+      volumes:
+        - name: "{{ .Release.Name }}-conf-import"
+          configMap:
+            name: "{{ .Release.Name }}-conf-import"
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-char-server"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-char-server"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: char-server
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 6121
+          command:
+            - /opt/rathena/char-server
+          volumeMounts:
+            - name: "{{ .Release.Name }}-conf-import"
+              mountPath: /opt/rathena/conf/import
+      volumes:
+        - name: "{{ .Release.Name }}-conf-import"
+          configMap:
+            name: "{{ .Release.Name }}-conf-import"
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-map-server"
+spec:
+  replicas: {{ .Values.servers.mapServer.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-map-server"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: map-server
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          ports:
+            - containerPort: 5121
+          command:
+            - /opt/rathena/map-server
+          volumeMounts:
+            - name: "{{ .Release.Name }}-conf-import"
+              mountPath: /opt/rathena/conf/import
+      volumes:
+        - name: "{{ .Release.Name }}-conf-import"
+          configMap:
+            name: "{{ .Release.Name }}-conf-import"
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}

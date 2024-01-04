@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-login-server-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-login-server"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-login-server-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
+  ports:
+    - name: login-server
+      port: {{ .Values.servers.loginServer.service.port }}
+      protocol: TCP
+      targetPort: 6900
+  type: {{ .Values.servers.loginServer.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-char-server-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-char-server"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-char-server-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
+  ports:
+    - name: char-server
+      port: {{ .Values.servers.charServer.service.port }}
+      protocol: TCP
+      targetPort: 6121
+  type: {{ .Values.servers.charServer.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.servers.namespace }}
+  name: "{{ .Release.Name }}-map-server-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-map-server"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-map-server-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
+  ports:
+    - name: map-server
+      port: {{ .Values.servers.mapServer.service.port }}
+      protocol: TCP
+      targetPort: 5121
+  type: {{ .Values.servers.mapServer.service.type }}

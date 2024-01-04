@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-conf-import"
+  labels:
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  atcommands.yml: ''
+  battle_conf.txt: ''
+  char_conf.txt: |
+    userid: {{ .Values.servers.interServer.auth.userid }}
+    passwd: {{ .Values.servers.interServer.auth.passwd }}
+    server_name: {{.Values.servers.globalName}}
+    login_ip: {{ .Release.Name }}-login-server-svc
+    login_port: {{ .Values.servers.loginServer.service.port }}
+    char_port: {{ .Values.servers.charServer.service.port }}
+    max_connect_user: 10
+    clan_remove_inactive_days: 0
+    mail_return_days: 7
+  groups.yml: ''
+  inter_conf.txt: |
+    // MySQL Login server
+    login_server_ip:{{ .Values.databases.main.host }}
+    login_server_port:{{ .Values.databases.main.port }}
+    login_server_id:{{ .Values.databases.main.username }}
+    login_server_pw:{{ .Values.databases.main.password }}
+    login_server_db:{{ .Values.databases.main.name }}
+    login_codepage:
+    login_case_sensitive: no
+    ipban_db_ip: {{ .Values.databases.main.host }}
+    ipban_db_port: {{ .Values.databases.main.port }}
+    ipban_db_id: {{ .Values.databases.main.username }}
+    ipban_db_pw: {{ .Values.databases.main.password }}
+    ipban_db_db: {{ .Values.databases.main.name }}
+    ipban_codepage:
+    // MySQL Character server
+    char_server_ip:   {{ .Values.databases.main.host }}
+    char_server_port: {{ .Values.databases.main.port }}
+    char_server_id:   {{ .Values.databases.main.username }}
+    char_server_pw:   {{ .Values.databases.main.password }}
+    char_server_db:   {{ .Values.databases.main.name }}
+    // MySQL Map Server
+    map_server_ip:   {{ .Values.databases.main.host }}
+    map_server_port: {{ .Values.databases.main.port }}
+    map_server_id: {{ .Values.databases.main.username }}
+    map_server_pw: {{ .Values.databases.main.password }}
+    map_server_db: {{ .Values.databases.main.name }}
+    // MySQL Web Server
+    web_server_ip: {{ .Values.databases.main.host }}
+    web_server_port: {{ .Values.databases.main.port }}
+    web_server_id: {{ .Values.databases.main.username }}
+    web_server_pw: {{ .Values.databases.main.password }}
+    web_server_db: {{ .Values.databases.main.name }}
+    // MySQL Log Database
+    log_db_ip: {{ .Values.databases.log.host }}
+    log_db_port: {{ .Values.databases.log.port }}
+    log_db_id: {{ .Values.databases.log.username }}
+    log_db_pw: {{ .Values.databases.log.password }}
+    log_db_db: {{ .Values.databases.log.name }}
+    log_codepage:
+    log_login_db: loginlog
+    use_sql_db: yes
+    sql_logs: 1
+  inter_server.yml: ''
+  log_conf.txt: ''
+  login_conf.txt: |
+    login_port: {{ .Values.servers.loginServer.service.port }}
+    use_MD5_password: {{ .Values.servers.loginServer.md5Password }}
+  map_conf.txt: |
+    userid: {{ .Values.servers.interServer.auth.userid }}
+    passwd: {{ .Values.servers.interServer.auth.passwd }}
+    char_ip: {{ .Release.Name }}-char-server-svc
+    char_port: {{ .Values.servers.charServer.service.port }}
+    map_port: {{ .Values.servers.mapServer.service.port }}
+  packet_conf.txt: ''
+  script_conf.txt: ''
+  web_conf.txt: ''

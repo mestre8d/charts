@@ -1,0 +1,55 @@
+image:
+  imagePullPolicy: Always
+  imagePullSecrets:
+  - name: registry-auth
+  name: ghcr.io/filipe-souza/rathena
+  tag: v0.0.1
+replicaCount: 1
+databases:
+  # -- The main database connection information.
+  main:
+    host: "127.0.0.1"
+    port: "3306"
+    username: "ragnarok"
+    password: "ragnarok"
+    name: "ragnarok"
+  # -- The log database connection information.
+  log:
+    host: "127.0.0.1"
+    port: "3306"
+    username: "ragnarok"
+    password: "ragnarok"
+    name: "log"
+servers:
+  annotations: {}
+  labels: {}
+  # -- Sets the server_name into the char_conf.txt
+  globalName: rAthena
+  # -- Configures the service creation and number of replicas of the pods for the char-server
+  charServer:
+    replicas: 1
+    service:
+      create: true
+      port: 6121
+      type: ClusterIP
+  # -- Configures the service creation and number of replicas of the pods for the login-server
+  loginServer:
+    # -- Set this value to yes if going to use MySQL 8.0
+    md5Password: no
+    replicas: 1
+    service:
+      create: true
+      port: 6900
+      type: ClusterIP
+  # -- Configures the service creation and number of replicas of the pods for the map-server
+  mapServer:
+    replicas: 1
+    service:
+      create: true
+      port: 5121
+      type: ClusterIP
+  # -- Configures the credentials to be stored into the config files for the inter-server authentication.
+  interServer:
+    auth:
+      passwd: p1
+      userid: s1
