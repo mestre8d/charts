@@ -3,50 +3,82 @@ image:
   imagePullSecrets:
   - name: registry-auth
   name: ghcr.io/filipe-souza/rathena
-  tag: v0.0.1
+  tag: v0.0.2
 replicaCount: 1
 databases:
-  # -- The main database connection information.
   main:
+    # -- Main database host address
     host: "127.0.0.1"
+    # -- Main database host port
     port: "3306"
+    # -- Main database username
     username: "ragnarok"
+    # -- Main database password
     password: "ragnarok"
+    # -- Main database schema name
     name: "ragnarok"
-  # -- The log database connection information.
   log:
+    # -- Log database host address
     host: "127.0.0.1"
+    # -- Log database host port
     port: "3306"
+    # -- Log database username
     username: "ragnarok"
+    # -- Log database password
     password: "ragnarok"
+    # -- Log database schema name
     name: "log"
 servers:
   annotations: {}
   labels: {}
   # -- Sets the server_name into the char_conf.txt
   globalName: rAthena
-  # -- Configures the service creation and number of replicas of the pods for the char-server
   charServer:
+    # -- Number of replicas of this pod
     replicas: 1
+    livenessProbe:
+      # -- Delay to start probing the pod
+      initialDelaySeconds: 30
+      # -- Delay between probes on the pod
+      periodSeconds: 60
     service:
+      # -- Enable/disables the creation of the service
       create: true
+      # -- Port that service will be listening
       port: 6121
+      # -- Type of service.
       type: ClusterIP
-  # -- Configures the service creation and number of replicas of the pods for the login-server
   loginServer:
     # -- Set this value to yes if going to use MySQL 8.0
     md5Password: no
+    # -- Number of replicas of this pod
     replicas: 1
+    livenessProbe:
+      # -- Delay to start probing the pod
+      initialDelaySeconds: 15
+      # -- Delay between probes on the pod
+      periodSeconds: 60
     service:
+      # -- Enable/disables the creation of the service
       create: true
+      # -- Port that service will be listening
       port: 6900
+      # -- Type of service.
       type: ClusterIP
-  # -- Configures the service creation and number of replicas of the pods for the map-server
   mapServer:
+    # -- Number of replicas of this pod
     replicas: 1
+    livenessProbe:
+      # -- Delay to start probing the pod
+      initialDelaySeconds: 30
+      # -- Delay between probes on the pod
+      periodSeconds: 60
     service:
+      # -- Enable/disables the creation of the service
       create: true
+      # -- Port that service will be listening
       port: 5121
+      # -- Type of service.
       type: ClusterIP
   # -- Configures the credentials to be stored into the config files for the inter-server authentication.
   interServer:

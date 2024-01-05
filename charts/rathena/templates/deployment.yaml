@@ -20,6 +20,11 @@ spec:
     spec:
       containers:
         - name: login-server
+          livenessProbe:
+            tcpSocket:
+              port: 6900
+            initialDelaySeconds: {{ .Values.servers.loginServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.loginServer.livenessProbe.periodSeconds }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           ports:
@@ -58,6 +63,11 @@ spec:
     spec:
       containers:
         - name: char-server
+          livenessProbe:
+            tcpSocket:
+              port: 6121
+            initialDelaySeconds: {{ .Values.servers.charServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.charServer.livenessProbe.periodSeconds }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           ports:
@@ -97,6 +107,11 @@ spec:
     spec:
       containers:
         - name: map-server
+          livenessProbe:
+            tcpSocket:
+              port: 5121
+            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           ports:
