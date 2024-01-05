@@ -3,7 +3,7 @@ image:
   imagePullSecrets:
   - name: registry-auth
   name: ghcr.io/filipe-souza/rathena
-  tag: v0.0.1
+  tag: v0.0.2
 replicaCount: 1
 databases:
   # -- The main database connection information.
@@ -28,6 +28,9 @@ servers:
   # -- Configures the service creation and number of replicas of the pods for the char-server
   charServer:
     replicas: 1
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 60
     service:
       create: true
       port: 6121
@@ -37,6 +40,9 @@ servers:
     # -- Set this value to yes if going to use MySQL 8.0
     md5Password: no
     replicas: 1
+    livenessProbe:
+      initialDelaySeconds: 15
+      periodSeconds: 60
     service:
       create: true
       port: 6900
@@ -44,6 +50,9 @@ servers:
   # -- Configures the service creation and number of replicas of the pods for the map-server
   mapServer:
     replicas: 1
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 60
     service:
       create: true
       port: 5121
