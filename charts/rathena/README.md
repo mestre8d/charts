@@ -1,10 +1,10 @@
 # rathena-helm
 
-![Version: 0.0.0](https://img.shields.io/badge/Version-0.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 
-**Homepage:** <https://github.com/Filipe-Souza/rathena-helm>
+**Homepage:** <https://github.com/mestre8d/charts>
 
 ## Maintainers
 
@@ -14,27 +14,51 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 
 ## Source Code
 
-* <https://github.com/Filipe-Souza/rathena-helm>
+* <https://github.com/mestre8d/charts/tree/main/charts/rathena>
+* <https://github.com/Filipe-Souza/rathena-docker>
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| databases.log | object | `{"host":"127.0.0.1","name":"log","password":"ragnarok","port":"3306","username":"ragnarok"}` | The log database connection information. |
-| databases.main | object | `{"host":"127.0.0.1","name":"ragnarok","password":"ragnarok","port":"3306","username":"ragnarok"}` | The main database connection information. |
+| databases.log.host | string | `"127.0.0.1"` | Log database host address |
+| databases.log.name | string | `"log"` | Log database schema name |
+| databases.log.password | string | `"ragnarok"` | Log database password |
+| databases.log.port | string | `"3306"` | Log database host port |
+| databases.log.username | string | `"ragnarok"` | Log database username |
+| databases.main.host | string | `"127.0.0.1"` | Main database host address |
+| databases.main.name | string | `"ragnarok"` | Main database schema name |
+| databases.main.password | string | `"ragnarok"` | Main database password |
+| databases.main.port | string | `"3306"` | Main database host port |
+| databases.main.username | string | `"ragnarok"` | Main database username |
 | image.imagePullPolicy | string | `"Always"` |  |
 | image.imagePullSecrets[0].name | string | `"registry-auth"` |  |
 | image.name | string | `"ghcr.io/filipe-souza/rathena"` |  |
-| image.tag | string | `"v0.0.1"` |  |
+| image.tag | string | `"v0.0.2"` |  |
 | replicaCount | int | `1` |  |
 | servers.annotations | object | `{}` |  |
-| servers.charServer | object | `{"replicas":1,"service":{"create":true,"port":6121,"type":"ClusterIP"}}` | Configures the service creation and number of replicas of the pods for the char-server |
+| servers.charServer.livenessProbe.initialDelaySeconds | int | `30` | Delay to start probing the pod |
+| servers.charServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
+| servers.charServer.replicas | int | `1` | Number of replicas of this pod |
+| servers.charServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.charServer.service.port | int | `6121` | Port that service will be listening |
+| servers.charServer.service.type | string | `"ClusterIP"` | Type of service. |
 | servers.globalName | string | `"rAthena"` | Sets the server_name into the char_conf.txt |
 | servers.interServer | object | `{"auth":{"passwd":"p1","userid":"s1"}}` | Configures the credentials to be stored into the config files for the inter-server authentication. |
 | servers.labels | object | `{}` |  |
-| servers.loginServer | object | `{"md5Password":"no","replicas":1,"service":{"create":true,"port":6900,"type":"ClusterIP"}}` | Configures the service creation and number of replicas of the pods for the login-server |
+| servers.loginServer.livenessProbe.initialDelaySeconds | int | `15` | Delay to start probing the pod |
+| servers.loginServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
 | servers.loginServer.md5Password | string | `"no"` | Set this value to yes if going to use MySQL 8.0 |
-| servers.mapServer | object | `{"replicas":1,"service":{"create":true,"port":5121,"type":"ClusterIP"}}` | Configures the service creation and number of replicas of the pods for the map-server |
+| servers.loginServer.replicas | int | `1` | Number of replicas of this pod |
+| servers.loginServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.loginServer.service.port | int | `6900` | Port that service will be listening |
+| servers.loginServer.service.type | string | `"ClusterIP"` | Type of service. |
+| servers.mapServer.livenessProbe.initialDelaySeconds | int | `30` | Delay to start probing the pod |
+| servers.mapServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
+| servers.mapServer.replicas | int | `1` | Number of replicas of this pod |
+| servers.mapServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.mapServer.service.port | int | `5121` | Port that service will be listening |
+| servers.mapServer.service.type | string | `"ClusterIP"` | Type of service. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.12.0](https://github.com/norwoodj/helm-docs/releases/v1.12.0)
