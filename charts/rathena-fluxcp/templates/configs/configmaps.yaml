@@ -1,0 +1,2072 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-config"
+  labels:
+    {{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  access.php: |-
+    <?php
+    // This file should control all access to specified modules and actions.
+    return array(
+    	// Module/action permissions.
+    	// These are handled during runtime by Flux.
+    	// '*' is a default that is checked for any action that has not been
+    	// specified an access level.
+    	'modules' => array(
+    		'main'      => array(
+    			'*'        => AccountLevel::ANYONE
+    		),
+    		'donate'    => array(
+    			'index'    => AccountLevel::ANYONE,
+    			'notify'   => AccountLevel::ANYONE,
+    			'update'   => AccountLevel::ANYONE,
+    			'complete' => AccountLevel::ANYONE,
+    			'history'  => AccountLevel::NORMAL,
+    			'trusted'  => AccountLevel::NORMAL
+    		),
+    		'purchase'  => array(
+    			'index'    => AccountLevel::ANYONE,
+    			'add'      => AccountLevel::ANYONE,
+    			'clear'    => AccountLevel::NORMAL,
+    			'cart'     => AccountLevel::NORMAL,
+    			'checkout' => AccountLevel::NORMAL,
+    			'remove'   => AccountLevel::NORMAL,
+    			'pending'  => AccountLevel::NORMAL
+    		),
+    		'itemshop'  => array(
+    			'add'      => AccountLevel::ADMIN,
+    			'edit'     => AccountLevel::ADMIN,
+    			'delete'   => AccountLevel::ADMIN,
+    			'imagedel' => AccountLevel::ADMIN
+    		),
+    		'cashshop'  => array(
+    			'index'    => AccountLevel::ADMIN,
+    			'add'      => AccountLevel::ADMIN,
+    			'edit'     => AccountLevel::ADMIN,
+    			'delete'   => AccountLevel::ADMIN
+    		),
+    		'account'   => array(
+    			'index'    => AccountLevel::LOWGM,
+    			'view'     => AccountLevel::NORMAL,
+    			'create'   => AccountLevel::UNAUTH,
+    			'login'    => AccountLevel::UNAUTH,
+    			'logout'   => AccountLevel::NORMAL,
+    			'transfer' => AccountLevel::NORMAL,
+    			'xferlog'  => AccountLevel::NORMAL,
+    			'cart'     => AccountLevel::NORMAL,
+    			'changepass' => AccountLevel::NORMAL,
+    			'edit'       => AccountLevel::ADMIN,
+    			'changesex'  => AccountLevel::NORMAL,
+    			'confirm'    => AccountLevel::UNAUTH,
+    			'resend'     => AccountLevel::UNAUTH,
+    			'resetpass'  => AccountLevel::UNAUTH,
+    			'resetpw'    => AccountLevel::UNAUTH,
+    			'changemail' => AccountLevel::NORMAL,
+    			'confirmemail' => AccountLevel::NORMAL,
+    			'prune'        => AccountLevel::ANYONE
+    		),
+    		'character'	=> array(
+    			'index'			=> AccountLevel::LOWGM,
+    			'view'			=> AccountLevel::NORMAL,
+    			'online'		=> AccountLevel::ANYONE,
+    			'prefs'			=> AccountLevel::NORMAL,
+    			'changeslot'	=> AccountLevel::NORMAL,
+    			'resetlook'		=> AccountLevel::NORMAL,
+    			'resetpos'		=> AccountLevel::NORMAL,
+    			'mapstats'		=> AccountLevel::ANYONE,
+    			'divorce'		=> AccountLevel::NORMAL
+    		),
+    		'guild'		=> array(
+    			'emblem'		=> AccountLevel::ANYONE,
+    			'index'			=> AccountLevel::LOWGM,
+    			'export'		=> AccountLevel::ADMIN,
+    			'view'			=> AccountLevel::NORMAL
+    		),
+    		'castle'	=> array(
+    			'index'			=> AccountLevel::ANYONE
+    		),
+    		'economy'	=> array(
+    			'index'			=> AccountLevel::NORMAL
+    		),
+    		'auction'	=> array(
+    			'index'			=> AccountLevel::LOWGM
+    		),
+    		'ranking'	=> array(
+    			'character'		=> AccountLevel::ANYONE,
+    			'guild'			=> AccountLevel::ANYONE,
+    			'zeny'			=> AccountLevel::ANYONE,
+    			'death'			=> AccountLevel::ANYONE,
+    			'homun'			=> AccountLevel::ANYONE,
+    			'swordman'		=> AccountLevel::ANYONE,
+    			'bowman'		=> AccountLevel::ANYONE,
+    			'spearman'		=> AccountLevel::ANYONE,
+    			'mvp'       	=> AccountLevel::ANYONE,
+    		),
+    		'item'		=> array(
+    			'index'			=> AccountLevel::ANYONE,
+    			'view'			=> AccountLevel::ANYONE,
+                'iteminfo'		=> AccountLevel::ADMIN
+    		),
+    		'monster'	=> array(
+    			'index'			=> AccountLevel::ANYONE,
+    			'view'			=> AccountLevel::ANYONE
+    		),
+    		'server'	=> array(
+    			'status'		=> AccountLevel::ANYONE,
+    			'status-xml'	=> AccountLevel::ANYONE,
+    			'info'			=> AccountLevel::ANYONE
+    		),
+    		'logdata'	=> array(
+    			'index'			=> AccountLevel::ADMIN,
+    			'char'			=> AccountLevel::ADMIN,
+    			'cashpoints'	=> AccountLevel::ADMIN,
+    			'feeding'		=> AccountLevel::ADMIN,
+    			'inter'			=> AccountLevel::ADMIN,
+    			'command'		=> AccountLevel::ADMIN,
+    			'branch'		=> AccountLevel::ADMIN,
+    			'chat'			=> AccountLevel::ADMIN,
+    			'login'			=> AccountLevel::ADMIN,
+    			'mvp'			=> AccountLevel::ADMIN,
+    			'npc'			=> AccountLevel::ADMIN,
+    			'pick'			=> AccountLevel::ADMIN,
+    			'zeny'			=> AccountLevel::ADMIN
+    		),
+    		'cplog'		=> array(
+    			'index'			=> AccountLevel::ADMIN,
+    			'create'		=> AccountLevel::ADMIN,
+    			'paypal'		=> AccountLevel::ADMIN,
+    			'login'			=> AccountLevel::ADMIN,
+    			'resetpass'		=> AccountLevel::ADMIN,
+    			'changepass'	=> AccountLevel::ADMIN,
+    			'changemail'	=> AccountLevel::ADMIN,
+    			'ban'			=> AccountLevel::ADMIN,
+    			'ipban'			=> AccountLevel::ADMIN,
+    			'txnview'		=> AccountLevel::ADMIN			
+    		),
+    		'ipban'		=> array(
+    			'index'			=> AccountLevel::ADMIN,
+    			'add'			=> AccountLevel::ADMIN,
+    			'unban'			=> AccountLevel::ADMIN,
+    			'edit'			=> AccountLevel::ADMIN,
+    			'remove'		=> AccountLevel::ADMIN
+    		),
+    		'service'	=> array(
+    			'tos'			=> AccountLevel::ANYONE
+    		),
+    		'captcha'	=> array(
+    			'index'			=> AccountLevel::ANYONE
+    		),
+    		'install'	=> array(
+    			'index'			=> AccountLevel::ANYONE,
+    			'reinstall'		=> AccountLevel::ADMIN
+    		),
+    		'test'		=> array(
+    			'*'				=> AccountLevel::ANYONE
+    		),
+    		'woe'		=> array(
+    			'index'			=> AccountLevel::ANYONE
+    		),
+    		'mail'		=> array(
+    			'index'			=> AccountLevel::ADMIN
+    		),
+    		'history'	=> array(
+    			'index'			=> AccountLevel::NORMAL,
+    			'cplogin'		=> AccountLevel::NORMAL,
+    			'gamelogin'		=> AccountLevel::NORMAL,
+    			'emailchange'	=> AccountLevel::NORMAL,
+    			'passchange'	=> AccountLevel::NORMAL,
+    			'passreset'		=> AccountLevel::NORMAL
+    		),
+    		'pages'		=> array(
+    			'index' 		=> AccountLevel::ADMIN,
+    			'add' 			=> AccountLevel::ADMIN,
+    			'delete' 		=> AccountLevel::ADMIN,
+    			'edit' 			=> AccountLevel::ADMIN,
+    			'content' 		=> AccountLevel::ANYONE,
+    		),
+    		'news'		=> array(
+    			'index' 		=>  AccountLevel::ANYONE,
+    			'view' 			=>  AccountLevel::ANYONE,
+    			'manage'		=>  AccountLevel::ADMIN,
+    			'add' 			=>  AccountLevel::ADMIN,
+    			'edit' 			=>  AccountLevel::ADMIN,
+    			'delete' 		=> AccountLevel::ADMIN,
+    		),
+    		'servicedesk'=> array(
+    			'index'			=> AccountLevel::NORMAL,
+    			'create'		=> AccountLevel::NORMAL,
+    			'view'			=> AccountLevel::NORMAL,
+    			'staffindex'	=> AccountLevel::LOWGM,
+    			'staffview'		=> AccountLevel::LOWGM,
+    			'staffviewclosed'=> AccountLevel::LOWGM,
+    			'staffsettings'	=> AccountLevel::LOWGM,
+    			'catcontrol'	=> AccountLevel::HIGHGM
+    		),
+    		'vending'		=> array(
+    			'index'			=> AccountLevel::ANYONE,
+    			'viewshop'		=> AccountLevel::ANYONE,
+    		),	
+    		'webcommands'	=> array(
+    			'index'			=> AccountLevel::ADMIN,
+    		),
+    	),
+    	// General feature permissions, handled by the modules themselves.
+    	'features' => array(
+    		'ViewAccount'		=> AccountLevel::HIGHGM, // View another person's account details.
+    		'ViewAccountBanLog'	=> AccountLevel::HIGHGM, // View another person's account ban log.
+    		'DeleteAccount'		=> AccountLevel::ADMIN,  // (not yet implemented)
+    		'DeleteCharacter'	=> AccountLevel::ADMIN,  // (not yet implemented)
+    		'SeeAccountPassword'	=> AccountLevel::NOONE,  // If not using MD5, view another person's password in list.
+    		'TempBanAccount'	=> AccountLevel::LOWGM,  // Has ability to temporarily ban an account.
+    		'TempUnbanAccount'	=> AccountLevel::LOWGM,  // Has ability to remove a temporary ban on an account.
+    		'PermBanAccount'	=> AccountLevel::HIGHGM, // Has ability to permanently ban an account.
+    		'PermUnbanAccount'	=> AccountLevel::HIGHGM, // Has ability to remove a permanent ban on an account.
+    		'SearchMD5Passwords'	=> AccountLevel::NOONE,  // Ability to search MD5'd passwords in list.
+    		'ViewCharacter'		=> AccountLevel::HIGHGM, // View another person's character details.
+    		'DivorceCharacter'	=> AccountLevel::LOWGM,  // Divorce another character.
+    		'AddShopItem'		=> AccountLevel::ADMIN,  // Ability to add an item to the shop.
+    		'EditShopItem'		=> AccountLevel::ADMIN,  // Ability to modify a shop item's details.
+    		'DeleteShopItem'     => AccountLevel::ADMIN,  // Ability to remove an item for sale on the shop.
+    		'ManageCashShop'     => AccountLevel::ADMIN,  // Ability to manage the in-game cash shop.
+    		'ViewGuild'          => AccountLevel::ADMIN,  // Ability to view another guild's details.
+    		'SearchWhosOnline'   => AccountLevel::ANYONE, // Ability to search the "Who's Online" page.
+    		'ViewOnlinePosition' => AccountLevel::LOWGM,  // Ability to see a character's current map on "Who's Online" page.
+    		'EditAccountGroupID' => AccountLevel::ADMIN,  // Ability to edit another person's account group ID.
+    		'EditAccountBalance' => AccountLevel::ADMIN,  // Ability to edit another person's account balance.
+    		'ModifyAccountPrefs' => AccountLevel::ADMIN,  // Ability to modify another person's account preferences.
+    		'ModifyCharPrefs'    => AccountLevel::ADMIN,  // Ability to modify another person's character preferences.
+    		'IgnoreHiddenPref'   => AccountLevel::LOWGM,  // Ability to see users on "Who's Online" page, hidden or not.
+    		'IgnoreHiddenPref2'  => AccountLevel::LOWGM,  // Ability to see users on "Who's Online" page, hidden by app config or not.
+    		'SeeHiddenMapStats'  => AccountLevel::LOWGM,  // Ability to see hidden map statistics.
+    		'ChangeSlot'         => AccountLevel::LOWGM,  // Minimum group level required to change another character's slot.
+    		'ModifyIpBan'        => AccountLevel::ADMIN,  // Minimum group level required to modify an existing IP ban.
+    		'RemoveIpBan'        => AccountLevel::ADMIN,  // Minimum group level required to remove an existing IP ban.
+    		'HideFromZenyRank'   => AccountLevel::NORMAL, // Ability to set "Hide from zeny ranking" pref.
+    		'SeeItemDbScripts'   => AccountLevel::ANYONE, // Ability to see item_db scripts in view page.
+    		'SeeItemDb2Scripts'  => AccountLevel::ADMIN,  // Ability to see item_db2 scripts in view page.
+    		'ViewRawTxnLogData'  => AccountLevel::ADMIN,  // Minimum group level required to view Raw Transaction Log in txnview page.
+    		'ResetLook'          => AccountLevel::LOWGM,  // Minimum group level required to reset another character's look.
+    		'ResetPosition'      => AccountLevel::LOWGM,  // Minimum group level required to reset another character's position.
+    		'ViewWoeDisallowed'  => AccountLevel::LOWGM,  // Minimum group level required to bypass WoE-disabled page security check.
+    		'SeeCpLoginLogPass'  => AccountLevel::NOONE,  // Minimum group level required to see password in CP login log (also requires CpLoginLogShowPassword in application.php)
+    		'SearchCpLoginLogPw' => AccountLevel::NOONE,  // Minimum group level required to search through passwords in the CP login log.
+    		'SeeCpResetPass'     => AccountLevel::NOONE,  // Minimum group level required to see passwords in CP log's "password resets" page.
+    		'SearchCpResetPass'  => AccountLevel::NOONE,  // Minimum group level required to search passwords in CP log's "password resets" page.
+    		'SeeCpChangePass'    => AccountLevel::NOONE,  // Minimum group level required to see passwords in CP log's "password changes" page.
+    		'SearchCpChangePass' => AccountLevel::NOONE,  // Minimum group level required to search passwords in CP log's "password changes" page.
+    		'SeeAccountID'       => AccountLevel::LOWGM,  // Minimum group level required to see Account ID on account view and character view pages.
+    		'SeeUnknownItems'    => AccountLevel::LOWGM,  // Minimum group level required to see unidentified items as identified.
+    		'AvoidSexChangeCost' => AccountLevel::LOWGM,  // Avoid paying cost (if any) for sex changes.
+    		
+    		'EditHigherPower'    => AccountLevel::NOONE,
+    		'BanHigherPower'     => AccountLevel::NOONE
+    	)
+    );
+    ?>
+  application.php: |-
+    <?php
+    // This is the application configuration file. All values have been set to
+    // the default, and should be changed as needed.
+    return array(
+    	'ServerAddress'				=> '{{ .Values.configuration.serverAddress }}',				// This value is the hostname:port under which Flux runs. (e.g., example.com or example.com:80)
+    	'BaseURI'					=> '{{ .Values.configuration.baseUri }}',						// The base URI is the base web root on which your application lies.
+    	'InstallerPassword'			=> '{{ .Values.configuration.installerPassword }}',		// Installer/updater password.
+    	'RequireOwnership'			=> false,					// Require the executing user to be owner of the FLUX_ROOT/data/ directory tree? (Better for security)
+    															// WARNING: This will be mostly IGNORED on non-POSIX-compliant OSes (e.g. Windows).
+    	'DefaultLoginGroup'			=> null,
+    	'DefaultCharMapServer'		=> null,
+    	'DefaultLanguage'			=> 'en_us',					// Specify the default control panel language (see FLUX_ROOT/lang/ directory for available languages.)
+    	'SiteTitle'					=> 'Flux Control Panel',	// This value is only used if the theme decides to use it.
+    	'ThemeName'					=> array('default', 'bootstrap'), // Names of the themes you would like list for use in the footer. Themes are in FLUX_ROOT/themes.
+    	'ScriptTimeLimit'			=> 0,						// Script execution time limit. Specifies (in seconds) how long a page should run before timing out. (0 means forever)
+    	'MissingEmblemBMP'			=> 'empty.bmp',				//
+    	'ItemIconNameFormat'		=> '%d.png',				// The filename format for item icons (defaults to {itemid}.png).
+    	'ItemImageNameFormat'		=> '%d.png',				// The filename format for item images (defaults to {itemid}.png).
+    	'MonsterImageNameFormat'	=> '%d.gif',				// The filename format for monster images (defaults to {monsterid}.gif).
+    	'JobImageNameFormat'		=> '%d.gif',				// The filename format for job images (defaults to {jobid}.gif).
+    	'DivinePrideIntegration'	=> true,					// Dowload monsters and items images from https://www.divine-pride.net if it's not exist.
+    	'ForceEmptyEmblem'			=> false,					// Forcefully display empty guild emblems, helpful when you don't have GD2 installed.
+    	'EmblemCacheInterval'		=> 12,						// Hourly interval to re-cache guild emblems (set to 0 to disable emblem cache).
+    	'EmblemUseWebservice'		=> true,					// Load emblems from WebService?
+    	'SessionCookieExpire'		=> 48,						// Duration in hours.
+    	'AdminMenuGroupLevel'		=> AccountLevel::LOWGM,		// The starting group ID for which module actions are moved into the admin menu for display.
+    	'DateDefaultTimezone'		=> 'UTC',					// The default timezone, consult the PHP manual for valid timezones: http://php.net/timezones (null for defaut system TZ)
+    	'DateFormat'				=> 'Y-m-d',					// Default DATE format to be displayed in pages.
+    	'DateTimeFormat'			=> 'Y-m-d H:i:s',			// Default DATETIME format to be displayed in pages.
+    	'ShowSinglePage'			=> true,					// Whether or not to show the page numbers even if there's only one page.
+    	'ResultsPerPage'			=> 20,						// The number of results to display in a paged set, per page.
+    	'PagesToShow'				=> 10,						// The number of page numbers to display at once.
+    	'PageJumpMinimumPages'		=> 1,						// Minimum number of required pages before page jump box is shown. (0 to always show!)
+    	'ShowPageJump'				=> true,					// Whether or not to show the "Page Jump" box.
+    	'SingleMatchRedirect'		=> true,					// Whether or not to redirect to view action from index page if only one match is returned (and action is allowed).
+    	'SingleMatchRedirectItem'	=> false,					// Same as above, for item module.
+    	'SingleMatchRedirectMobs'	=> false,					// Same as above, for monster module.
+    	'UsernameAllowedChars'		=> 'a-zA-Z0-9_',			// PCRE Format Pattern. default: 'a-zA-Z0-9_' (alphanumeric and underscore)
+    															// WARNING: This string isn't escaped so be careful which chars you use!
+    															// PCRE Pattern Ref: http://php.net/manual/en/pcre.pattern.php
+    	'MinUsernameLength'			=> 4,						// Minimum username length.
+    	'MaxUsernameLength'			=> 23,						// Maximum username length.
+    	'MinPasswordLength'			=> 8,						// Minimum password length.
+    	'MaxPasswordLength'			=> 31,						// Maximum password length.
+    	'PasswordMinUpper'			=> 1,						// Number of upper-case letters to require in passwords.
+    	'PasswordMinLower'			=> 1,						// Number of lower-case letters to require in passwords.
+    	'PasswordMinNumber'			=> 1,						// Number of numbers to require in passwords.
+    	'PasswordMinSymbol'			=> 0,						// Number of symbols to require in passwords.
+    	'GMMinPasswordLength'		=> 8,						// Minimum password length for GM accounts.
+    	'GMPasswordMinUpper'		=> 1,						// Number of upper-case letters to require in passwords for GM accounts.
+    	'GMPasswordMinLower'		=> 1,						// Number of lower-case letters to require in passwords for GM accounts.
+    	'GMPasswordMinNumber'		=> 1,						// Number of numbers to require in passwords for GM accounts.
+    	'GMPasswordMinSymbol'		=> 1,						// Number of symbols to require in passwords for GM accounts.
+    	'RandomPasswordLength'		=> 16,						// This is the length of the random password generated by the "Reset Password" feature. (NOTE: Hardcoded minimum value of 8)
+    	'AllowUserInPassword'		=> false,					// Whether or not to allow the password to contain the username. (NOTE: A case-insensitive search is performed)
+    	'AllowDuplicateEmails'		=> false,					// Whether or not to allow duplicate e-mails to be used in registration. (See Mailer config options)
+    	'RequireEmailConfirm'		=> false,					// Require e-mail confirmation during registration.
+    	'RequireChangeConfirm'		=> false,					// Require confirmation when changing e-mail addresses.
+    	'EmailConfirmExpire'		=> 48,						// E-mail confirmations expire hours. Unconfirmed accounts will expire after this period of time.
+    	'PincodeEnabled'			=> true,					// Whether or not the pincode system is enabled in your server. (Check your char_athena.conf file. Enabled by default.)
+    	'MailerFromAddress'			=> 'noreply@localhost',		// The e-mail address displayed in the From field.
+    	'MailerFromName'			=> 'MailerName',			// The name displayed with the From e-mail address.
+    	'MailerUseSMTP'				=> false,					// Whether or not to use a separate SMTP server for sending mail.
+    	'MailerSMTPUseSSL'			=> false,					// Whether or not mailer should connect using SSL (yes for GMail).
+    	'MailerSMTPUseTLS'			=> false,					// Same as above SSL setting, but for TLS.  This setting will override the SSL setting.
+    	'MailerSMTPPort'			=> null,					// When MailerUseSMTP is true: SMTP server port (mailer will default to 25).
+    	'MailerSMTPHosts'			=> null,					// When MailerUseSMTP is true: A string host or array of hosts (e.g., 'host1' or array('host1', 'backuphost')).
+    	'MailerSMTPUsername'		=> null,					// When MailerUseSMTP is true: Authorized username for SMTP server.
+    	'MailerSMTPPassword'		=> null,					// When MailerUseSMTP is true: Authorized password for SMTP server (for above user).
+    	'ServerStatusCache'			=> 2,						// Store a cached server status and refresh every X minutes.  Default: 2 minutes (value is measured in minutes).
+    	'ServerStatusTimeout'		=> 2,						// For each server, spend X amount of seconds to determine whether it's up or not.
+    	'SessionKey'				=> 'fluxSessionData',		// Shouldn't be changed, just specifies the session key to be used for session data.
+    	'DefaultModule'				=> 'main',					// This is the module to execute when none has been specified.
+    	'DefaultAction'				=> 'index',					// This is the default action for any module, probably should leave this alone. (Deprecated)
+    	'GzipCompressOutput'		=> false,					// Whether or not to compress output using zlib.
+    	'GzipCompressionLevel'		=> 9,						// zlib compression level. (1~9)
+    	'OutputCleanHTML'			=> true,					// Use this if you have Tidy installed to clean your HTML output when serving pages.
+    	'ShowCopyright'				=> true,					// Whether or not to show the copyright footer.
+    	'ShowRenderDetails'			=> true,					// Shows the "page rendered in X seconds" and "number of queries executed: X" in the default theme.
+    	'UseCleanUrls'				=> false,					// Set to true if you're running Apache and it supports mod_rewrite and .htaccess files.
+    	'DebugMode'					=> false,					// Set to false to minimize technical details from being output by Flux. WARNING: DO NOT USE THIS OPTION ON A PUBLICALLY-ACCESSIBLE CP.
+    	'UseCaptcha'				=> false,					// Use CAPTCHA image for account registration to prevent automated account creations. (Requires GD2/FreeType2)
+    	'UseLoginCaptcha'			=> false,					// Use CAPTCHA image for account logins. (Requires GD2/FreeType2)
+    	'EnableReCaptcha'			=> false,					// Enables the use of reCAPTCHA instead of Flux's native GD2 library (http://www.google.com/recaptcha)
+    	'ReCaptchaPublicKey'		=> '...',					// This is your reCAPTCHA public key [REQUIRED FOR RECAPTCHA] (sign up at http://www.google.com/recaptcha)
+    	'ReCaptchaPrivateKey'		=> '...',					// This is your reCAPTCHA private key [REQUIRED FOR RECAPTCHA] (sign up at http://www.google.com/recaptcha)
+    	'ReCaptchaTheme'			=> 'light',					// ReCaptcha theme to use (Value: dark or light) (see: https://developers.google.com/recaptcha/docs/display#render_param)
+    	'DisplaySinglePages'		=> true,					// Whether or not to display paging for single page results.
+    	'ForwardYears'				=> 15,						// (Visual) The number of years to display ahead of the current year in date inputs.
+    	'BackwardYears'				=> 60,						// (Visual) The number of years to display behind the current year in date inputs.
+    	'ColumnSortAscending'		=> ' ▲',					// (Visual) Text displayed for ascending sorted column names.
+    	'ColumnSortDescending'		=> ' ▼',					// (Visual) Text displayed for descending sorted column names.
+    	'CreditExchangeRate'		=> 1.0,						// The rate at which credits are exchanged for dollars.
+    	'MinDonationAmount'			=> 2.0,						// Minimum donation amount. (NOTE: Actual donations made that are less than this account won't be exchanged)
+    	'DonationCurrency'			=> 'USD',					// Preferred donation currency. Only donations made in this currency will be processed for credit deposits.
+    	'MoneyDecimalPlaces'		=> 2,						// (Visual) Number of decimal places to display in amount.
+    	'MoneyThousandsSymbol'		=> ',',						// (Visual) Thousandths place separator (a period in European currencies).
+    	'MoneyDecimalSymbol'		=> '.',						// (Visual) Decimal separator (a comma in European currencies).
+    	'AcceptDonations'			=> true,					// Whether or not to accept donations.
+    	'PayPalIpnUrl'				=> 'www.paypal.com',		// The ipnpb.paypal.com and ipnpb.sandbox.paypal.com endpoints only accept HTTPS connections. If you currently use www.paypal.com, you should move to ipnpb.paypal.com when you update your code to use HTTPS.
+    	'PayPalBusinessEmail'		=> 'admin@localhost',		// Enter the e-mail under which you have registered your business account.
+    	'PayPalReceiverEmails'		=> array(					// These are the receiver e-mail addresses who are allowed to receive payment.
+    		//'admin2@localhost',								// -- This array may be empty if you only use one e-mail
+    		//'admin3@localhost'								// -- because your Business Email is also checked.
+    	),
+    	'PaypalHackNotify'          => true,                    // Send email notification if hack attempt detected (Notification will be send for each address in list PayPalBusinessEmail and PayPalReceiverEmails)
+    	'PayPalAllowedHosts'        => array(					// PayPal IP list https://www.paypal.com/fm/smarthelp/article/what-are-the-ip-addresses-for-live-paypal-servers-ts1056
+    		'ipn.sandbox.paypal.com',
+    		'notify.paypal.com',
+    		'66.211.170.66',
+    		'173.0.81.1',
+    		'173.0.81.0/24',
+    		'173.0.81.33',
+    		'173.0.81.65',
+    		'173.0.81.140',
+    		'64.4.240.0/21',
+    		'64.4.248.0/22',
+    		'6.211.168.0/22',
+    		'173.0.80.0/20',
+    		'91.243.72.0/23'
+    	),
+    	'GStorageLeaderOnly'		=> false,					// Only allow guild leader to view guild storage rather than all members?
+    	'DivorceKeepChild'			=> false,					// Keep child after divorce?
+    	'DivorceKeepRings'			=> false,					// Keep wedding rings after divorce?
+    	'IpWhitelistPattern'		=>							// PCRE Format Pattern. It's recommended you add your gameserver, webserver and server owner's IPs here.
+    		'(127\.0\.0\.1|0(\.[0\*]){3})',						// WARNING: This string isn't escaped so be careful which chars you use!
+    															// By default, whitelists 127.0.0.1 (localhost) and 0.0.0.0 (all interfaces; whitelists all wildcard bans that can achive this too)
+    	'AllowIpBanLogin'			=> false,					// Allow logging into account from banned IP.
+    	'AllowTempBanLogin'			=> false,					// Allow logging in of temporarily banned accounts.
+    	'AllowPermBanLogin'			=> false,					// Allow logging in of permanently banned accounts.
+    	'AutoRemoveTempBans'		=> true,					// Automatically remove expired temporary bans on certain pages.
+    	'ItemShopMaxCost'			=> 99,						// Max price an item can be sold for.
+    	'ItemShopMaxQuantity'		=> 99,						// Max quantity the item may be sold at once for.
+    	'ItemShopItemPerPage'		=> 5,						// The number of items to display per page in the "Item Shop" page.
+        'ShowItemDesc'              => false,                   // Displays generated item descs from parsed itemInfo.lua
+    	'HideFromWhosOnline'		=> AccountLevel::LOWGM,		// Levels greater than or equal to this will be hidden from the "Who's Online" page.
+    	'HideFromMapStats'			=> AccountLevel::LOWGM,		// Levels greater than or equal to this will be hidden from the "Map Stats" page.
+    	'EnableGMPassSecurity'		=> AccountLevel::LOWGM,		// Levels greater than or equal to this will be required to use passwords that meet the earlier GM Password settings.
+    	'ChargeGenderChange'		=> 0,						// You can specify this as the number of credits to charge for gender change.  Can be 0 for free change.
+    	'BanPaymentStatuses'		=> array(					// Payment statuses that will automatically ban the account owner if received.
+    		'Cancelled_Reversal',								// -- 'Cancelled_Reversal'
+    		'Reversed',											// -- 'Reversed'
+    	),
+    
+    	'HoldUntrustedAccount'		=> 0,						// This is the time in hours to hold a donation crediting process for, if the account
+    															// isn't a trusted account. Specify 0 or false to disable this feature.
+    
+    	'AutoUnholdAccount'			=> false,					// Enable this to auto-unhold an account and credit it if the transaction is still
+    															// valid.  This only applies if you are using the HoldUnstrustedAccount feature.
+    															// If you want to run a cron job instead, you can make a request to the '/donate/update'
+    															// module/action with the InstallerPassword as the password to run the update task.
+    															// With clean URLs: http://<server>/<baseURI>/donate/update?password=<InstallerPassword>
+    															// Without clean URLs: http://<server>/<baseURI>?module=donate&action=update&password=<InstallerPassword>
+    															// NOTE: This option is HIGHLY inefficient, it's recommended to run a cron job instead.
+    
+    	'AutoPruneAccounts'			=> false,					// Enable this to automatically prune expired accounts. Enabling this is a performance
+    															// performance killer. See 'AutoUnholdAccount' for running this task as a cron job,
+    															// the module is 'account' and the action is 'prune'.
+    															// With clean URLs: http://<server>/<baseURI>/account/prune?password=<InstallerPassword>
+    															// Without clean URLs: http://<server>/<baseURI>?module=account&action=prune&password=<InstallerPassword>
+    
+    	'ShopImageExtensions'		=> array(					// These are the image extensions allowed for uploading in the item shop.
+    		'png', 'jpg', 'gif', 'bmp', 'jpeg'
+    	),
+    	'NoResetPassGroupLevel'		=> AccountLevel::LOWGM,		// Minimum group level of account to prevent password reset using control panel.
+    
+    	'CharRankingLimit'			=> 20,						//
+    	'GuildRankingLimit'			=> 20,						//
+    	'ZenyRankingLimit'			=> 20,						//
+    	'DeathRankingLimit'			=> 20,						//
+    	'AlchemistRankingLimit'		=> 20,						//
+    	'BlacksmithRankingLimit'	=> 20,						//
+    	'HomunRankingLimit'			=> 20,						//
+    	'MVPRankingLimit'			=> 20,						//
+    
+    	'RankingHideGroupLevel'		=> AccountLevel::LOWGM,		//
+    	'InfoHideZenyGroupLevel'	=> AccountLevel::LOWGM,		// Minimum group level of account to hide zeny from in server information page.
+    
+    	'CharRankingThreshold'		=> 0,						// Number of days the character must have logged in within to be listed in character ranking. (0 = disabled)
+    	'ZenyRankingThreshold'		=> 0,						// Number of days the character must have logged in within to be listed in zeny ranking. (0 = disabled)
+    	'DeathRankingThreshold'		=> 0,						// Number of days the character must have logged in within to be listed in death ranking. (0 = disabled)
+    	'AlchemistRankingThreshold'	=> 0,						// Number of days the character must have logged in within to be listed in death ranking. (0 = disabled)
+    	'HomunRankingThreshold'		=> 0,						// Number of days the character must have logged in within to be listed in homunculus ranking. (0 = disabled)
+    
+    	'HideTempBannedCharRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedCharRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'HideTempBannedZenyRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedZenyRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'HideTempBannedDeathRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedDeathRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'HideTempBannedAlcheRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedAlcheRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'HideTempBannedSmithRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedSmithRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'HideTempBannedStats'		=> false,					// Hide temporarily banned accounts from statistics.
+    	'HidePermBannedStats'		=> true,					// Hide permanently banned accounts from statistics.
+    
+    	'HideTempBannedHomunRank'	=> false,					// Hide temporarily banned characters from ranking.
+    	'HidePermBannedHomunRank'	=> true,					// Hide permanently banned characters from ranking.
+    
+    	'SortJobsByAmount'			=> false,					// Sort job class information on statistics page by descending quantity (false = Sort by Job ID).
+    
+    	'CpLoginLogShowPassword'	=> false,					// Show password in CP login log (also see access.php's SeeCpLoginLogPass).
+    
+    	'CpResetLogShowPassword'	=> false,					// Show password in CP "password resets" log (also see access.php's SeeCpResetPass).
+    
+    	'CpChangeLogShowPassword'	=> false,					// Show password in CP "password changes" log (also see access.php's SeeCpChangePass).
+    
+    	'AdminMenuNewStyle'			=> true,					// Use new-style admin menu;  Applies to 'default' theme.
+    	'EnablePeakDisplay'			=> true,					// Display Peak User count on Server Status page.
+    
+    
+    // News Options
+    	'CMSNewsOnHomepage'			=> true,					// Display News on Home Page instead of "You've Just Installed FluxCP" message?
+    	'CMSNewsType'				=> 1,						// Type = source of news feed:
+    															//	1 = Built-in news page
+    															//	2 = RSS Import
+    
+    	'CMSNewsRSS'				=> 'https://rathena.org/board/rss/1-latest-community-announcements.xml/',		// Use if CMSNewsType = 2
+    	'CMSNewsLimit'				=> 4,						// Number of news items to display
+    	'CMSDisplayModifiedBy'		=> false,					// If a news item has been modified, display modified date under news item?
+    
+    // Service Desk
+    	'StaffReplyColour'			=> 'brown',
+    	'FontResolvedColour'		=> 'green',
+    	'FontPendingColour'			=> 'orange',
+    	'FontClosedColour'			=> 'darkgrey',
+    	'SDEnableCreditRewards'		=> true,					// Show option in Service Desk to reward player X credits for reporting bugs/abuse/etc.
+    	'SDCreditReward'			=> 10,						// Number of credits to award account.
+    
+    // Discord Webhooks
+    	'DiscordUseWebhook'			=> false,
+    	'DiscordWebhookURL'			=> 'enter_webhook_url_from_discord_here',
+        'DiscordSendOnRegister'     => true, // Sends a channel message when someone registers
+        'DiscordSendOnNewTicket'    => true, // Sends a channel message when someone submits a new ticket to the Service Desk
+        'DiscordSendOnWebCommand'   => true, // Sends a channel message when someone uses the Web Command feature in FluxCP
+        'DiscordSendOnMarketing'    => true, // Sends a channel message when someone uses the Send Email feature in FluxCP
+    
+    	'TinyMCEKey'				=> 'no-key',				// Register for a key at https://www.tiny.cloud/my-account/dashboard/
+    
+    	// These are the main menu items that should be displayed by themes.
+    	// They route to modules and actions.  Whether they are displayed or
+    	// not at any given time depends on the user's account group level and/or
+    	// their login status.
+    	'MenuItems'		=> array(
+    		'MainMenuLabel'		=> array(
+    			'HomeLabel'			=> array('module' => 'main'),
+    			//'ForumLabel'		=> array('exturl' => 'http://www.fluxro.com/community'),	// External forum link
+    			//'ForumLabel'		=> array('module' => 'forums'), 						// Built-in forum link
+    			'NewsLabel'			=> array('module' => 'news'),
+    			// Sample items for pages function.
+    			'DownloadsLabel'		=> array('module' => 'pages','action'=>'content&path=downloads'),
+    			'RulesLabel'			=> array('module' => 'pages','action'=>'content&path=rules'),
+    			// End sample items for pages function.
+    		),
+    		'AccountLabel'		=> array(
+    			'AccountCreateHeading'		=> array('module' => 'account', 'action' => 'create'),
+    			'LoginTitle'			=> array('module' => 'account', 'action' => 'login'),
+    			'MyAccountLabel'	=> array('module' => 'account', 'action' => 'view'),
+    			'HistoryLabel'		=> array('module' => 'history'),
+    			'ServiceDeskLabel'	=> array('module' => 'servicedesk'),
+    			'LogoutTitle'		=> array('module' => 'account', 'action' => 'logout'),
+    		),
+    		'DonationsLabel'		=> array(
+    			'PurchaseLabel'		=> array('module' => 'purchase'),
+    			'DonateLabel'		=> array('module' => 'donate'),
+    		),
+    		'InformationLabel'	=> array(
+    			'ServerInfoLabel'	=> array('module' => 'server', 'action' => 'info'),
+    			'ServerStatusLabel'	=> array('module' => 'server', 'action' => 'status'),
+    			'WoeHoursLabel'		=> array('module' => 'woe'),
+    			'CastlesLabel'		=> array('module' => 'castle'),
+    			'WhosOnlineLabel'	=> array('module' => 'character', 'action' => 'online'),
+    			'MapStaticsLabel'=> array('module' => 'character', 'action' => 'mapstats'),
+    			'RankingInfoLabel'	=> array('module' => 'ranking', 'action' => 'character'),
+    			'VendingInfoLabel'	=> array('module' => 'vending'),
+    			'BuyingstoreInfoLabel'	=> array('module' => 'buyingstore'),
+    		),
+    		'DatabaseLabel'		=> array(
+    			'ItemDatabaseLabel'	=> array('module' => 'item'),
+    			'MobDatabaseLabel'	=> array('module' => 'monster'),
+    		),
+    		'SocialLabel'		=> array(
+    			'JoinUsInFacebookLabel'	=> array('exturl' => 'https://www.facebook.com/<change_me>'),
+    			'RateUsOnRMSLabel'		=> array('exturl' => '<link_to_RMS>'),
+    		),
+    		'Service Desk'	=> array(
+    			'ServiceDeskLabel'	=> array('module' => 'servicedesk', 'action' => 'staffindex'),
+    		),
+    		'Misc. Stuff'	=> array(
+    			'AccountLabel'		=> array('module' => 'account'),
+    			'CharacterLabel'	=> array('module' => 'character'),
+    			'CPLogsLabel'		=> array('module' => 'cplog'),
+    			'PagesLabel'		=> array('module' => 'pages'),
+    			'NewsLabel'			=> array('module' => 'news', 'action' => 'manage'),
+    			'GuildsLabel'		=> array('module' => 'guild'),
+    			'IPBanListLabel'	=> array('module' => 'ipban'),
+    			'rALogsLabel'		=> array('module' => 'logdata'),
+    			'ReInstallLabel'	=> array('module' => 'install', 'action' => 'reinstall'),
+    			'SendMailLabel'		=> array('module' => 'mail'),
+    			'WCTitleLabel'		=> array('module' => 'webcommands'),
+    			'Cash Shop'			=> array('module' => 'cashshop'),
+    			//'Auction'		=> array('module' => 'auction'),
+    			//'Economy'		=> array('module' => 'economy')
+    		)
+    	),
+    
+    	// Sub-menu items that are displayed for any action belonging to a
+    	// particular module. The format it simple.
+    	'SubMenuItems'	=> array(
+    		'history'		=> array(
+    			'gamelogin'		=> 'Game Logins',
+    			'cplogin'		=> 'CP Logins',
+    			'emailchange'	=> 'E-Mail Changes',
+    			'passchange'	=> 'Password Changes',
+    			'passreset'		=> 'Password Resets'
+    		),
+    		'account'		=> array(
+    			'index'			=> 'List Accounts',
+    			'view'			=> 'View Account',
+    			'changepass'	=> 'Change Password',
+    			'changemail'	=> 'Change E-mail',
+    			'changesex'		=> 'Change Gender',
+    			'transfer'		=> 'Transfer Credits',
+    			'xferlog'		=> 'Credit Transfer History',
+    			'cart'			=> 'Go to Shopping Cart',
+    			'login'			=> 'Login',
+    			'create'		=> 'Register',
+    			'resetpass'		=> 'Reset Password',
+    			'resend'		=> 'Resend E-mail Confirmation'
+    		),
+    		'guild'			=> array(
+    			'index'			=> 'List Guilds',
+    			'export'		=> 'Export Guild Emblems'
+    		),
+    		'server'		=> array(
+    			'status'		=> 'View Status',
+    			'status-xml'	=> 'View Status as XML'
+    		),
+    		'logdata'		=> array(
+    			'branch'		=> 'Branches',
+    			'char'			=> 'Characters',
+    			'cashpoints'	=> 'CashPoints',
+    			'chat'			=> 'Chat Messages',
+    			'command'		=> 'Commands',
+    			'feeding'		=> 'Feeding',
+    			'inter'			=> 'Interactions',
+    			'pick'			=> 'Item Picks',
+    			'login'			=> 'Logins',
+    			'mvp'			=> 'MVP',
+    			'npc'			=> 'NPC',
+    			'zeny'			=> 'Zeny'
+    		),
+    		'cplog'			=> array(
+    			'paypal'		=> 'PayPal Transactions',
+    			'create'		=> 'Account Registrations',
+    			'login'			=> 'Logins',
+    			'resetpass'		=> 'Password Resets',
+    			'changepass'	=> 'Password Changes',
+    			'changemail'	=> 'E-mail Changes',
+    			'ban'			=> 'Account Bans',
+    			'ipban'			=> 'IP Bans'
+    		),
+    		'purchase'		=> array(
+    			'index'			=> 'Shop',
+    			'cart'			=> 'Go to Cart',
+    			'checkout'		=> 'Checkout',
+    			'clear'			=> 'Empty Cart',
+    			'pending'		=> 'Pending Redemption'
+    		),
+    		'donate'		=> array(
+    			'index'			=> 'Make a Donation',
+    			'history'		=> 'Donation History',
+    			'trusted'		=> 'Trusted PayPal E-mails'
+    		),
+    		'ipban'			=> array(
+    			'index'			=> 'IP Ban List',
+    			'add'			=> 'Add IP Ban'
+    		),
+    		'ranking'		=> array(
+    			'character'		=> 'Characters',
+    			'death'			=> 'Deaths',
+    			'alchemist'		=> 'Alchemists',
+    			'blacksmith'	=> 'Blacksmiths',
+    			'homunculus'	=> 'Homunculus',
+    			'mvp'			=> 'MVPs',
+    			'guild'			=> 'Guilds',
+    			'zeny'			=> 'Zeny'
+    		),
+    		'item'			=> array(
+    			'index'			=> 'List Items',
+    			'iteminfo'		=> 'Add Item Info',
+    		),
+    		'pages'			=> array(
+    			'index'			=> 'Manage Pages',
+    			'add'			=> 'Add New Page',
+    		),
+    		'news'			=> array(
+    			'index'			=> 'Latest News',
+    			'manage'			=> 'Manage',
+    			'add'			=> 'Add News',
+    		),
+    		'servicedesk'	=> array(
+    			'staffindex'	=> 'View Active',
+    			'staffviewclosed'=> 'View Closed',
+    			'staffsettings'	=> 'Staff Settings',
+    			'catcontrol'	=> 'Category Control',
+    		),
+    		'vending'			=> array(
+    			'index'			=> 'Vendors',
+    		),
+    		'buyingstore'		=> array(
+    			'index'			=> 'Buyers',
+    		),
+    	),
+    
+    	'AllowMD5PasswordSearch'		=> false,
+    	'ReallyAllowMD5PasswordSearch'	=> false, // Are you POSITIVELY sure?
+    
+    	// Specifies which modules and actions should be ignored by Tidy
+    	// (enabled/disabled by the OutputCleanHTML option).
+    	'TidyIgnore'	=> array(
+    		array('module' => 'captcha'),
+    		array('module' => 'guild', 'action' => 'emblem')
+    	),
+    
+    	// Job classes, loaded from another file to avoid cluttering this one.
+    	// There isn't normally a need to modify this file, unless it's been
+    	// modified in an update. (In English: DON'T TOUCH THIS.)
+    	'JobClasses'					=> include('jobs.php'),
+    
+    	// Alchemist job classes, mostly used for alchemist rankings.
+    	// Should be left alone unless new alchemist-related job classes are introduced.
+    	'AlchemistJobClasses'			=> include('jobs_alchemist.php'),
+    
+    	// Blacksmith job classes, mostly used for blacksmith rankings.
+    	// Should be left alone unless new blacksmith-related job classes are introduced.
+    	'BlacksmithJobClasses'			=> include('jobs_blacksmith.php'),
+    
+    	// Gender-linked Job class IDs and their corresponding names.
+    	// Should be left alone unless new gender-specific job classes are introduced.
+    	'GenderLinkedJobClasses'		=> include('jobs_gender_linked.php'),
+    
+    	// Homunculus class IDs and their corresponding names.
+    	// Best not to mess with this either.
+    	'HomunClasses'					=> include('homunculus.php'),
+    
+    	// Item Types with their corresponding names.
+    	// Shouldn't touch this either.
+    	'ItemTypes'						=> include('itemtypes.php'),
+    
+    	// Item SubTypes with their corresponding names.
+    	// Shouldn't touch this either.
+    	'ItemSubTypes'					=> include('itemsubtypes.php'),
+    
+    	// Common Equip Location Combinations with their corresponding names.
+    	// Shouldn't touch this unless you've added custom combinations.
+    	'EquipLocationCombinations'		=> include('equip_location_combinations.php'),
+    
+    	// Error Code -> Error Type mapping.
+    	// Shouldn't need touching, however modifying loginerrors.php should be relatively safe.
+    	'LoginErrors'					=> include('loginerrors.php'),
+    
+    	// rA equip jobs mapping.
+    	'EquipJobs'						=> include('equip_jobs.php'),
+    
+    	// rA equip locations mapping.
+    	'EquipLocations'				=> include('equip_locations.php'),
+    
+    	// rA equip upper mapping.
+    	'EquipUpper'					=> include('equip_upper.php'),
+    
+    	// rA monster sizes mapping.
+    	'MonsterSizes'					=> include('sizes.php'),
+    
+    	// rA monster races mapping.
+    	'MonsterRaces'					=> include('races.php'),
+    
+    	// rA elements mapping.
+    	'Elements'						=> include('elements.php'),
+    
+    	// rA attributes mapping.
+    	'Attributes'					=> include('attributes.php'),
+    
+    	// rA monster modes mapping.
+    	'MonsterModes'					=> include('monstermode.php'),
+    	'MonsterAI'						=> include('monster_ai.php'),
+    
+    	// Item shop categories.
+    	'ShopCategories'				=> include('shopcategories.php'),
+    
+    	// Cash shop categories.
+    	'CashShopCategories'			=> include('cashshopcategories.php'),
+    
+    	// Item pick and zeny log types.
+    	'PickTypes'						=> include('picktypes.php'),
+    
+    	// Type of feeding
+    	'FeedingTypes'					=> include('feedingtypes.php'),
+    
+    	// Castle names.
+    	'CastleNames'					=> include('castlenames.php'),
+    
+    	// Trade restrictions.
+    	'TradeRestriction'				=> include('trade_restrictions.php'),
+    
+    	// Item flags.
+    	'ItemFlags'						=> include('itemsflags.php'),
+    
+    	// Item random options.
+    	'RandomOptions'					=> include('item_randoptions.php'),
+    
+    	// DON'T TOUCH. THIS IS FOR DEVELOPERS.
+    	'FluxTables'		=> array(
+    		'CreditsTable'			=> 'cp_credits',
+    		'CreditTransferTable'	=> 'cp_xferlog',
+    		'ItemShopTable'			=> 'cp_itemshop',
+    		'TransactionTable'		=> 'cp_txnlog',
+    		'RedemptionTable'		=> 'cp_redeemlog',
+    		'AccountCreateTable'	=> 'cp_createlog',
+    		'AccountBanTable'		=> 'cp_banlog',
+    		'IpBanTable'			=> 'cp_ipbanlog',
+    		'DonationTrustTable'	=> 'cp_trusted',
+    		'AccountPrefsTable'		=> 'cp_loginprefs',
+    		'CharacterPrefsTable'	=> 'cp_charprefs',
+    		'ResetPasswordTable'	=> 'cp_resetpass',
+    		'ChangeEmailTable'		=> 'cp_emailchange',
+    		'LoginLogTable'			=> 'cp_loginlog',
+    		'ChangePasswordTable'	=> 'cp_pwchange',
+    		'OnlinePeakTable'		=> 'cp_onlinepeak',
+    		'CMSNewsTable'			=> 'cp_cmsnews',
+    		'CMSPagesTable'			=> 'cp_cmspages',
+    		'CMSSettingsTable'		=> 'cp_cmssettings',
+    		'ServiceDeskTable'		=> 'cp_servicedesk',
+    		'ServiceDeskATable'		=> 'cp_servicedeska',
+    		'ServiceDeskCatTable'	=> 'cp_servicedeskcat',
+    		'ServiceDeskSettingsTable'	=> 'cp_servicedesksettings',
+    		'WebCommandsTable'		=> 'cp_commands',
+            'ItemDescTable'     	=> 'cp_itemdesc',
+    	)
+    );
+    ?>
+  attributes.php: |-
+    <?php
+    // rA attributes.
+    return array(
+    	1 => 'Ice',
+    	2 => 'Earth',
+    	3 => 'Fire',
+    	4 => 'Wind',
+    );
+    ?>
+  cashshopcategories.php: |-
+    <?php
+    // These are categories for the cash shop. Pay close attention to the numbers,
+    // as these numbers are stored in the database when you add an item to a specific
+    // category, so it knows which category the item belongs to.
+    
+    // Keep in mind that different texture files will display different categories in-game.
+    // These are the same used in rAthena's db files.
+    return array(
+    	0 => 'New',
+    	1 => 'Hot',
+    	2 => 'Limited',
+    	3 => 'Rental',
+    	4 => 'Gear',
+    	5 => 'Buff',
+    	6 => 'Heal',
+    	7 => 'Other',
+    	8 => 'Sale'
+    );
+    ?>
+  castlenames.php: |-
+    <?php
+    // Commenting out a castle's entry will remove it from the castles page
+    // and exclude it from being a factor in the guild ranking.
+    return array(
+    	// iRO Names
+    	 0 => 'Neuschwanstein',
+    	 1 => 'Hohenschwangau',
+    	 2 => 'Nuenberg',
+    	 3 => 'Wuerzburg',
+    	 4 => 'Rothenburg',
+    	 5 => 'Repherion',
+    	 6 => 'Eeyolbriggar',
+    	 7 => 'Yesnelph',
+    	 8 => 'Bergel',
+    	 9 => 'Mersetzdeitz',
+    	10 => 'Bright Arbor',
+    	11 => 'Scarlet Palace',
+    	12 => 'Holy Shadow',
+    	13 => 'Sacred Altar',
+    	14 => 'Bamboo Grove Hill',
+    	15 => 'Kriemhild',
+    	16 => 'Swanhild',
+    	17 => 'Fadhgridh',
+    	18 => 'Skoegul',
+    	19 => 'Gondul',
+    	20 => 'Novice Aldebaran',
+    	21 => 'Novice Geffen',
+    	22 => 'Novice Payon',
+    	23 => 'Novice Prontera',
+    	24 => 'Himinn',
+    	25 => 'Andlangr',
+    	26 => 'Viblainn',
+    	27 => 'Hljod',
+    	28 => 'Skidbladnir',
+    	29 => 'Mardol',
+    	30 => 'Cyr',
+    	31 => 'Horn',
+    	32 => 'Gefn',
+    	33 => 'Bandis',
+    	34 => 'Leilah',
+    	35 => 'Pavianne',
+    	36 => 'Jasmine',
+    	37 => 'Roxie',
+    	38 => 'Curly Sue',
+    	39 => 'Gaebolg',
+    	40 => 'Richard',
+    	41 => 'Wigner',
+    	42 => 'Heine',
+    	43 => 'Nerious'
+    	// kRO Names
+    	/**
+    	 * 0 => 'Noisyubantian',
+    	 * 1 => 'Hohensyubangawoo',
+    	 * 2 => 'Nyirenverk',
+    	 * 3 => 'Byirtsburi',
+    	 * 4 => 'Rotenburk',
+    	 * 5 => 'Reprion',
+    	 * 6 => 'Yolbriger',
+    	 * 7 => 'Isinlife',
+    	 * 8 => 'Berigel',
+    	 * 9 => 'Melsedetsu',
+    	 *10 => 'Mingting',
+    	 *11 => 'Tiantan',
+    	 *12 => 'Fuying',
+    	 *13 => 'Honglou',
+    	 *14 => 'Zhulinxian',
+    	 *15 => 'Creamhilt',
+    	 *16 => 'Sbanhealt',
+    	 *17 => 'Lazrigees',
+    	 *18 => 'Squagul',
+    	 *19 => 'Guindull',
+    	 *20 => 'Novice Aldebaran',
+    	 *21 => 'Novice Geffen',
+    	 *22 => 'Novice Payon',
+    	 *23 => 'Novice Prontera',
+    	 *24 => 'Himinn',
+    	 *25 => 'Andlangr',
+    	 *26 => 'Viblainn',
+    	 *27 => 'Hljod',
+    	 *28 => 'Skidbladnir',
+    	 *29 => 'Mardol',
+    	 *30 => 'Cyr',
+    	 *31 => 'Horn',
+    	 *32 => 'Gefn',
+    	 *33 => 'Bandis',
+    	 *34 => 'Kafragarten 1',
+    	 *35 => 'Kafragarten 2',
+    	 *36 => 'Kafragarten 3',
+    	 *37 => 'Kafragarten 4',
+    	 *38 => 'Kafragarten 5',
+    	 *39 => 'Gloria 1',
+    	 *40 => 'Gloria 2',
+    	 *41 => 'Gloria 3',
+    	 *42 => 'Gloria 4',
+    	 *43 => 'Gloria 5'
+    	 */
+    )
+    ?>
+  elements.php: |-
+    <?php
+    // rA elements.
+    return array(
+    	'Neutral' => 'Neutral',
+    	'Water' => 'Water',
+    	'Earth' => 'Earth',
+    	'Fire' => 'Fire',
+    	'Wind' => 'Wind',
+    	'Poison' => 'Poison',
+    	'Holy' => 'Holy',
+    	'Dark' => 'Dark',
+    	'Ghost' => 'Ghost',
+    	'Undead' => 'Undead'
+    );
+    ?>
+  equip_jobs.php: |-
+    <?php
+    return array(
+    	0	=>	// Default job list
+    	array(
+    		'job_all' => 'All jobs',
+    		'job_novice' => 'Novice',
+    		'job_supernovice' => 'Super novice',
+    		'job_swordman' => 'Swordman',
+    		'job_mage' => 'Mage',
+    		'job_archer' => 'Archer',
+    		'job_merchant' => 'Merchant',
+    		'job_thief' => 'Thief',
+    		'job_knight' => 'Knight',
+    		'job_priest' => 'Priest',
+    		'job_wizard' => 'Wizard',
+    		'job_blacksmith' => 'Blacksmith',
+    		'job_hunter' => 'Hunter',
+    		'job_assassin' => 'Assassin',
+    		'job_crusader' => 'Crusader',
+    		'job_monk' => 'Monk',
+    		'job_sage' => 'Sage',
+    		'job_rogue' => 'Rogue',
+    		'job_alchemist' => 'Alchemist',
+    		'job_barddancer' => 'Bard / Dancer',
+    		'job_taekwon' => 'Taekwon',
+    		'job_stargladiator' => 'Star Gladiator',
+    		'job_soullinker' => 'Soul Linker',
+    		'job_gunslinger' => 'Gunslinger',
+    		'job_ninja' => 'Ninja',
+    	),
+    	1	=>	// Renewal job list
+    	array(
+    		'job_kagerouoboro' => 'Kagerou / Oboro',
+    		'job_rebellion' => 'Rebellion',
+    		'job_summoner' => 'Summoner'
+    	)
+    )
+    ?>
+  equip_location_combinations.php: |-
+    <?php
+    return array(
+    	'location_left_hand/location_right_hand'	=> 'Two-Handed',
+    	'location_head_low/location_head_mid/location_head_top'		=> 'Upper/Mid/Lower Headgear',
+    	'location_head_mid/location_head_top'		=> 'Upper/Mid Headgear',
+    	'location_head_top/location_head_low'		=> 'Upper/Lower Headgear',
+    	'location_head_low/location_head_mid'		=> 'Mid/Lower Headgear',
+    	'location_head_low/location_head_top'		=> 'Upper/Lower Headgear',
+    	'location_costume_head_mid/location_costume_head_top'		=> 'Costume Upper/Mid Headgear',
+    	'location_costume_head_low/location_costume_head_top'		=> 'Costume Upper/Lower Headgear',
+    	'location_costume_head_low/location_costume_head_mid'		=> 'Costume Mid/Lower Headgear',
+    	'location_costume_head_low/location_costume_head_mid/location_costume_head_top'	=> 'Costume Upper/Mid/Lower Headgear',
+    	'location_left_accessory/location_right_accessory'	=> 'Accessory Left/Right',
+    	'location_armor/location_garment/location_head_low/location_head_mid/location_head_top/location_left_accessory/location_left_hand/location_right_accessory/location_right_hand/location_shoes'	=> 'All equip',
+    )
+    ?>
+  equip_locations.php: |-
+    <?php
+    return array(
+    	'location_head_low'					=> 'Lower Headgear',
+    	'location_right_hand'				=> 'Main Hand',
+    	'location_garment'					=> 'Garment',
+    	'location_right_accessory'			=> 'Accessory Right',
+    	'location_armor'					=> 'Armor',
+    	'location_left_hand'				=> 'Off Hand',
+    	'location_shoes'					=> 'Footgear',
+    	'location_left_accessory'			=> 'Accessory Left',
+    	'location_head_top'					=> 'Upper Headgear',
+    	'location_head_mid'					=> 'Middle Headgear',
+    	'location_costume_head_top'			=> 'Costume Top Headgear',
+    	'location_costume_head_mid'			=> 'Costume Mid Headgear',
+    	'location_costume_head_low'			=> 'Costume Low Headgear',
+    	'location_costume_garment'			=> 'Costume Garment',
+    	'location_ammo'						=> 'Ammo',
+    	'location_shadow_armor'				=> 'Shadow Armor',
+    	'location_shadow_weapon'			=> 'Shadow Weapon',
+    	'location_shadow_shield'			=> 'Shadow Shield',
+    	'location_shadow_shoes'				=> 'Shadow Shoes',
+    	'location_shadow_right_accessory'	=> 'Shadow Accessory Right (Earring)',
+    	'location_shadow_left_accessory'	=> 'Shadow Accessory Left (Pendant)',
+    )
+    ?>
+  equip_upper.php: |-
+    <?php
+    return array(
+    	0	=>	// Default class list
+    	array(
+    		'class_all' => 'All classes',
+    		'class_normal' => 'Normal',
+    		'class_upper' => 'Upper',
+    		'class_baby' => 'Baby'
+    	),
+    	1	=>	// Renewal class list
+    	array(
+    		'class_third' => 'Third',
+    		'class_third_upper' => 'Third Upper',
+    		'class_third_baby' => 'Third Baby'
+    	)
+    )
+    ?>
+  error.php: |-
+    <?php
+    // Configuration information for critical error handling.
+    // Critical errors are exposed due to an exception in the program.
+    
+    // Setting $showExceptions to true will cause not only exceptions to be displayed
+    // but also the backtrace, which can result in security issues such as exposing
+    // your MySQL user and password when unable to connect. Please keep it at false
+    // in a production environment.
+    
+    $adminEmail      = 'admin@localhost'; // Administrator e-mail address.
+    $errorFile       = 'error.php';       // Error file to render.
+    $showExceptions  = true;              // Whether or not to show exceptions (only applies to error.php)
+    ?>
+  feedingtypes.php: |-
+    <?php
+    return array(
+        'P' => 'Pet',
+        'H' => 'Homunculus',
+        'O' => 'Other',
+    );
+  groups.php: |-
+    <?php
+    final class AccountLevel {
+    /*	Corresponds to the different 'level' attribrutes */
+    	const ANYONE =   -2;
+    	const UNAUTH =   -1;
+    	const NORMAL =    0;
+    	const LOWGM  =    1;
+    	const HIGHGM =    2;
+    	const ADMIN  =   99;
+    	const NOONE  = 9999;
+    	
+    	private static $groups = array(
+    /**
+     *	Syntax:
+     * 		<group_id> => array(
+     *			'name'  => "<group name>",
+     *			'level' => "<group level>",
+     * 		),
+     */
+    		0 => array(
+    			'name'  => "Player",
+    			'level' => AccountLevel::NORMAL
+    		),
+    		1 => array(
+    			'name'  => "Super Player",
+    			'level' => AccountLevel::NORMAL
+    		),
+    		2 => array(
+    			'name'  => "Support",
+    			'level' => AccountLevel::LOWGM
+    		),
+    		3 => array(
+    			'name'  => "Script Manager",
+    			'level' => AccountLevel::LOWGM
+    		),
+    		4 => array(
+    			'name'  => "Event Manager",
+    			'level' => AccountLevel::LOWGM
+    		),
+    		5 => array(
+    			'name'  => "VIP",
+    			'level' => AccountLevel::NORMAL
+    		),
+    		10 => array(
+    			'name'  => "Law Enforcement",
+    			'level' => AccountLevel::HIGHGM
+    		),
+    		99 => array(
+    			'name'  => "Admin",
+    			'level' => AccountLevel::ADMIN
+    		)
+    	);
+    
+    	// DON'T TOUCH ANYTHING BELOW. THIS IS FOR DEVELOPERS.
+    	
+    	/**
+    	 * Get array of all groups.
+    	 *
+    	 * @return array
+    	 * @access public
+    	 */
+       public static function getArray() {
+            return self::$groups;
+        }
+    	
+    	/**
+    	 * Get array of group IDs that satisfy the operation 
+    	 * condition that compares the group level.
+    	 *
+    	 * @param int $compare
+    	 * @param string $op
+    	 * @return array
+    	 * @access public
+    	 */
+        public static function getGroupID($compare, $op) {
+    		$group_id = array();
+    		foreach(self::$groups as $id => $group) {
+    			if( ($op == '<' && $group['level'] < $compare) || ($op == '>' && $group['level'] > $compare) ||
+    				($op == '<=' && $group['level'] <= $compare) || ($op == '>=' && $group['level'] >= $compare)) {
+    				array_push($group_id, $id);
+    			}
+    		}
+            return $group_id;
+        }
+    	
+    	/**
+    	 * Get the level associated with the group ID.
+    	 *
+    	 * @param int $group_id
+    	 * @return int
+    	 * @access public
+    	 */
+        public static function getGroupLevel($group_id) {
+    		if(isset(self::$groups[$group_id]['level'])) {
+    			return self::$groups[$group_id]['level'];
+    		}
+    		else {
+    			return AccountLevel::NORMAL;
+    		}
+        }
+    	
+    	/**
+    	 * Get the name associated with the group ID.
+    	 *
+    	 * @param int $group_id
+    	 * @return string
+    	 * @access public
+    	 */
+        public static function getGroupName($group_id) {
+    		if(isset(self::$groups[$group_id]['name'])) {
+    			return self::$groups[$group_id]['name'];
+    		}
+    		else {
+    			return "N/A";
+    		}
+        }
+    }
+    ?>
+  homunculus.php: |-
+    <?php
+    return array(
+    	// Lif
+    	6001 => 'Lif',
+    	6009 => 'Lif',
+    	6005 => 'Lif',
+    	6013 => 'Lif',
+    	
+    	// Amistr
+    	6002 => 'Amistr',
+    	6010 => 'Amistr',
+    	6006 => 'Amistr',
+    	6014 => 'Amistr',
+    	
+    	// Filir
+    	6003 => 'Filir',
+    	6011 => 'Filir',
+    	6007 => 'Filir',
+    	6015 => 'Filir',
+    	
+    	// Vanilmirth
+    	6004 => 'Vanilmirth',
+    	6012 => 'Vanilmirth',
+    	6008 => 'Vanilmirth',
+    	6016 => 'Vanilmirth',
+    	
+    	// Homunculus S
+    	6048 => 'Eira',
+    	6049 => 'Bayeri',
+    	6050 => 'Sera',
+    	6051 => 'Dieter',
+    	6052 => 'Elanor'
+    );
+    ?>
+  item_randoptions.php: |-
+    <?php
+    return array(
+    	1	=>	'MaxHP +%s',
+    	2	=>	'MaxSP +%s',
+    	3	=>	'STR +%s',
+    	4	=>	'AGI +%s',
+    	5	=>	'VIT +%s',
+    	6	=>	'INT +%s',
+    	7	=>	'DEX +%s',
+    	8	=>	'LUK +%s',
+    	9	=>	'MaxHP +%s%%',
+    	10	=>	'MaxSP +%s%%',
+    	11	=>	'HP regen +%s%%',
+    	12	=>	'SP regen +%s%%',
+    	13	=>	'ATK +%s%%',
+    	14	=>	'MATK +%s%%',
+    	15	=>	'ASPD +%s',
+    	16	=>	'Delay after attack -%s%%',
+    	17	=>	'ATK +%s',
+    	18	=>	'HIT +%s',
+    	19	=>	'MATK +%s',
+    	20	=>	'DEF +%s',
+    	21	=>	'MDEF +%s',
+    	22	=>	'FLEE +%s',
+    	23	=>	'Perfect dodge +%s',
+    	24	=>	'CRIT +%s',
+    	25	=>	'Neutral elemental resistance +%s%%',
+    	26	=>	'Water elemental resistance +%s%%',
+    	27	=>	'Earth elemental resistance +%s%%',
+    	28	=>	'Fire elemental resistance +%s%%',
+    	29	=>	'Wind elemental resistance +%s%%',
+    	30	=>	'Poison elemental resistance +%s%%',
+    	31	=>	'Holy elemental resistance +%s%%',
+    	32	=>	'Shadow elemental resistance +%s%%',
+    	33	=>	'Ghost elemental resistance +%s%%',
+    	34	=>	'Undead elemental resistance +%s%%',
+    	35	=>	'All elementals resistance +%s%%',
+    	36	=>	'Neutral monster resistance +%s%%',
+    	37	=>	'ATK +%s%% against Neutral monster',
+    	38	=>	'Water monster resistance +%s%%',
+    	39	=>	'ATK +%s%% against Water monster',
+    	40	=>	'Earth monster resistance +%s%%',
+    	41	=>	'ATK +%s%% against Earth monster',
+    	42	=>	'Fire monster resistance +%s%%',
+    	43	=>	'ATK +%s%% against Fire monster',
+    	44	=>	'Wind monster resistance +%s%%',
+    	45	=>	'ATK +%s%% against Wind monster',
+    	46	=>	'Poison monster resistance +%s%%',
+    	47	=>	'ATK +%s%% against Poison monster',
+    	48	=>	'Holy monster resistance +%s%%',
+    	49	=>	'ATK +%s%% against Holy monster',
+    	50	=>	'Shadow monster resistance +%s%%',
+    	51	=>	'ATK +%s%% against Shadow monster',
+    	52	=>	'Ghost monster resistance +%s%%',
+    	53	=>	'ATK +%s%% against Ghost monster',
+    	54	=>	'Undead monster resistance +%s%%',
+    	55	=>	'ATK +%s%% against Undead monster',
+    	56	=>	'Neutral monster magic resistance +%s%%',
+    	57	=>	'MATK +%s%% against Neutral monster',
+    	58	=>	'Water monster magic resistance +%s%%',
+    	59	=>	'MATK +%s%% against Water monster',
+    	60	=>	'Earth monster magic resistance +%s%%',
+    	61	=>	'MATK +%s%% against  Earth monster',
+    	62	=>	'Fire monster magic resistance +%s%%',
+    	63	=>	'MATK +%s%% against Fire monster',
+    	64	=>	'Wind monster magic resistance +%s%%',
+    	65	=>	'MATK +%s%% against Wind monster',
+    	66	=>	'Poison monster magic resistance +%s%%',
+    	67	=>	'MATK +%s%% against Poison monster',
+    	68	=>	'Holy monster magic resistance +%s%%',
+    	69	=>	'MATK +%s%% against Holy monster',
+    	70	=>	'Shadow monster magic resistance +%s%%',
+    	71	=>	'MATK +%s%% against Shadow monster',
+    	72	=>	'Ghost monster magic resistance +%s%%',
+    	73	=>	'MATK +%s%% against Ghost monster',
+    	74	=>	'Undead monster magic resistance +%s%%',
+    	75	=>	'MATK +%s%% against Undead monster',
+    	76	=>	'Armor element: Neutral',
+    	77	=>	'Armor element: Water',
+    	78	=>	'Armor element: Earth',
+    	79	=>	'Armor element: Fire',
+    	80	=>	'Armor element: Wind',
+    	81	=>	'Armor element: Poison',
+    	82	=>	'Armor element: Holy',
+    	83	=>	'Armor element: Shadow',
+    	84	=>	'Armor element: Ghost',
+    	85	=>	'Armor element: Undead',
+    	//86	=>	'',
+    	87	=>	'Formless monster resistance +%s%%',
+    	88	=>	'Undead monster resistance +%s%%',
+    	89	=>	'Brute monster resistance +%s%%',
+    	90	=>	'Plant monster resistance +%s%%',
+    	91	=>	'Insect monster resistance +%s%%',
+    	92	=>	'Fish monster resistance +%s%%',
+    	93	=>	'Demon monster resistance +%s%%',
+    	94	=>	'Demihuman monster resistance +%s%%',
+    	95	=>	'Angel monster resistance +%s%%',
+    	96	=>	'Dragon monster resistance +%s%%',
+    	97	=>	'ATK +%s%% against Formless monster',
+    	98	=>	'ATK +%s%% against Undead monster',
+    	99	=>	'ATK +%s%% against Brute monster',
+    	100	=>	'ATK +%s%% against Plant monster',
+    	101	=>	'ATK +%s%% against Insect monster',
+    	102	=>	'ATK +%s%% against Fish monster',
+    	103	=>	'ATK +%s%% against Demon monster',
+    	104	=>	'ATK +%s%% against Demihuman monster',
+    	105	=>	'ATK +%s%% against Angel monster',
+    	106	=>	'ATK +%s%% against Dragon monster',
+    	107	=>	'MATK +%s%% against Formless monster',
+    	108	=>	'MATK +%s%% against Undead monster',
+    	109	=>	'MATK +%s%% against Brute monster',
+    	110	=>	'MATK +%s%% against Plant monster',
+    	111	=>	'MATK +%s%% against Insect monster',
+    	112	=>	'MATK +%s%% against Fish monster',
+    	113	=>	'MATK +%s%% against Devil monster',
+    	114	=>	'MATK +%s%% against Demihuman monster',
+    	115	=>	'MATK +%s%% against Angel monster',
+    	116	=>	'MATK +%s%% against Dragon monster',
+    	117	=>	'CRIT +%s against Formless monster',
+    	118	=>	'CRIT +%s against Undead monster',
+    	119	=>	'CRIT +%s against Brute monster',
+    	120	=>	'CRIT +%s against Plant monster',
+    	121	=>	'CRIT +%s against Insect monster',
+    	122	=>	'CRIT +%s against Fish monster',
+    	123	=>	'CRIT +%s against Demon monster',
+    	124	=>	'CRIT +%s against Demihuman monster',
+    	125	=>	'CRIT +%s against Angel monster',
+    	126	=>	'CRIT +%s against Dragon monster',
+    	127	=>	'Pierces %s%% DEF of Formless monster',
+    	128	=>	'Pierces %s%% DEF of Undead monster',
+    	129	=>	'Pierces %s%% DEF of Brute monster',
+    	130	=>	'Pierces %s%% DEF of Plant monster',
+    	131	=>	'Pierces %s%% DEF of Insect monster',
+    	132	=>	'Pierces %s%% DEF of Fish monster',
+    	133	=>	'Pierces %s%% DEF of Demon monster',
+    	134	=>	'Pierces %s%% DEF of Demihuman monster',
+    	135	=>	'Pierces %s%% DEF of Angel monster',
+    	136	=>	'Pierces %s%% DEF of Dragon monster',
+    	137	=>	'Pierces %s%% MDEF of Formless monster',
+    	138	=>	'Pierces %s%% MDEF of Undead monster',
+    	139	=>	'Pierces %s%% MDEF of Brute monster',
+    	140	=>	'Pierces %s%% MDEF of Plant monster',
+    	141	=>	'Pierces %s%% MDEF of Insect monster',
+    	142	=>	'Pierces %s%% MDEF of Fish monster',
+    	143	=>	'Pierces %s%% MDEF of Demon monster',
+    	144	=>	'Pierces %s%% MDEF of Demihuman monster',
+    	145	=>	'Pierces %s%% MDEF of Angel monster',
+    	146	=>	'Pierces %s%% MDEF of Dragon monster',
+    	147	=>	'ATK +%s%% against Normal monster',
+    	148	=>	'ATK +%s%% against Boss monster',
+    	149	=>	'Normal monster resistance +%s%%',
+    	150	=>	'Boss monster resistance +%s%%',
+    	151	=>	'MATK +%s%% against Normal monster',
+    	152	=>	'MATK +%s%% against Boss monster',
+    	153	=>	'Pierces %s%% DEF of Normal monster',
+    	154	=>	'Pierces %s%% DEF of Boss monster',
+    	155	=>	'Pierces %s%% MDEF of Normal monster',
+    	156	=>	'Pierces %s%% MDEF of Boss monster',
+    	157	=>	'ATK +%s%% against Small size monster',
+    	158	=>	'ATK +%s%% against Medium size monster',
+    	159	=>	'ATK +%s%% against Large size monster',
+    	160	=>	'Small monster resistance +%s%%',
+    	161	=>	'Medium monster resistance +%s%%',
+    	162	=>	'Large monster resistance +%s%%',
+    	163	=>	'Nullify weapon\'s damage size penalty',
+    	164	=>	'Critical attack +%s%%',
+    	165	=>	'Critical damage -%s%%',
+    	166	=>	'Long range physical attack +%s%%',
+    	167	=>	'Long range physical damage -%s%%',
+    	168	=>	'Healing skills +%s%%',
+    	169	=>	'Restoration gained from Healing skills +%s%%',
+    	170	=>	'Variable cast time -%s%%',
+    	171	=>	'After cast delay -%s%%',
+    	172	=>	'Reduces SP cost by %s%%',
+    	//173	=>	'',
+    	//174	=>	'',
+    	175	=>	'Weapon element: Neutral',
+    	176	=>	'Weapon element: Water',
+    	177	=>	'Weapon element: Earth',
+    	178	=>	'Weapon element: Fire',
+    	179	=>	'Weapon element: Wind',
+    	180	=>	'Weapon element: Poison',
+    	181	=>	'Weapon element: Holy',
+    	182	=>	'Weapon element: Shadow',
+    	183	=>	'Weapon element: Ghost',
+    	184	=>	'Weapon element: Undead',
+    	185	=>	'Indestructible in battle',
+    	186	=>	'Indestructible in battle',
+    	187	=>	'MATK against Small size monster +%s%%',
+    	188	=>	'MATK against Medium size monster +%s%%',
+    	189	=>	'MATK against Large size monster +%s%%',
+    	190	=>	'Small monster magic resistance +%s%%',
+    	191	=>	'Medium monster magic resistance +%s%%',
+    	192	=>	'Large monster magic resistance +%s%%',
+    	193	=>	'Elemental attacks resistance +%s%%',
+    	194	=>	'Formless monster resistance +%s%%',
+    	195	=>	'Undead monster resistance +%s%%',
+    	196	=>	'Brute monster resistance +%s%%',
+    	197	=>	'Plant monster resistance +%s%%',
+    	198	=>	'Insect monster resistance +%s%%',
+    	199	=>	'Fish monster resistance +%s%%',
+    	200	=>	'Demon monster resistance +%s%%',
+    	201	=>	'Demihuman monster resistance +%s%%',
+    	202	=>	'Angel monster resistance +%s%%',
+    	203	=>	'Dragon monster resistance +%s%%',
+    	204	=>	'Long range physical attack +%s%%',
+    	205	=>	'Long range physical damage -%s%%',
+    	206	=>	'Demi-Human players resistance + %s%%',
+    	207	=>	'Doram players resistance +%s%%',
+    	208	=>	'ATK against Demi-Human players +%s%%',
+    	209	=>	'ATK against Doram players +%s%%',
+    	210	=>	'MATK against Demi-Human players +%s%%',
+    	211	=>	'MATK against Doram players +%s%%',
+    	212	=>	'Critical +%s for Demi-Human players',
+    	213	=>	'Critical +%s for Doram players',
+    	214	=>	'Pierces %s%% DEF of Demi-Human players',
+    	215	=>	'Pierces %s%% DEF of Doram players',
+    	216	=>	'Pierces %s%% MDEF of Demi-Human players',
+    	217	=>	'Pierces %s%% MDEF of Doram players',
+    	218	=>	'Recieved reflected damage -%s%%',
+    	219	=>	'Melee physical damage +%s%%',
+    	220	=>	'Melee physical damage -%s%%',
+    	)
+    ?>
+  itemsflags.php: |-
+    <?php
+    return array(
+    	'flag_buyingstore'	=> 'Item is available to Buying Stores',
+    	'flag_deadbranch'	=> 'Item is a Dead Branch type',
+    	'flag_container'	=> 'Item is part of a Container',
+    	'flag_uniqueid'		=> 'Item is a unique stack',
+    	'flag_bindonequip'	=> 'Item is bound to the character upon equipping',
+    	'flag_dropannounce'	=> 'Item has a special announcement to self on drop',
+    	'flag_noconsume'	=> 'Item is consumed on use',
+    )
+    ?>
+  itemsubtypes.php: |-
+    <?php
+    return array(
+    	'weapon' => array(
+    		'1haxe'			=> 'One-Handed Axe',
+    		'1hspear'		=> 'One-Handed Spear',
+    		'1hsword'		=> 'One-Handed Sword',
+    		'2haxe'			=> 'Two-Handed Axe',
+    		'2hspear'		=> 'Two-Handed Spear',
+    		'2hstaff'		=> 'Two-Handed Staff',
+    		'2hsword'		=> 'Two-Handed Sword',
+    		'book'			=> 'Book',
+    		'bow'			=> 'Bow',
+    		'dagger'		=> 'Dagger',
+    		'gatling'		=> 'Gatling Gun',
+    		'grenade'		=> 'Grenade Launcher',
+    		'huuma'			=> 'Fuuma Shuriken',
+    		'katar'			=> 'Katar',
+    		'knuckle'		=> 'Knuckle',
+    		'mace'			=> 'Mace',
+    		'musical'		=> 'Musical Instrument',
+    		'revolver'		=> 'Revolver',
+    		'rifle'			=> 'Rifle',
+    		'shotgun'		=> 'Shotgun',
+    		'staff'			=> 'Staff',
+    		'whip'			=> 'Whip'
+    	),
+    	'ammo' => array(
+    		'arrow'			=> 'Arrow',
+    		'bullet'		=> 'Bullet',
+    		'dagger'		=> 'Throwing Dagger',
+    		'cannonball'	=> 'Cannonball',
+    		'grenade'		=> 'Grenade',
+    		'kunai'			=> 'Kunai',
+    		'shell'			=> 'Shell',
+    		'shuriken'		=> 'Shuriken',
+    		'throwweapon'	=> 'Throwable Item (Sling Item)'
+    	),
+    	'card' => array(
+    		'normal'			=> 'Card',
+    		'enchant'			=> 'Enchant'
+    	)
+    )
+    ?>
+  itemtypes.php: |-
+    <?php
+    return array(
+    	'ammo'			=> 'Ammo',
+    	'armor'			=> 'Armor',
+    	'card'			=> 'Card',
+    	'cash'			=> 'Cash Shop Reward',
+    	'delayconsume'	=> 'Delay Consume',
+    	'etc'			=> 'Etc',
+    	'healing'		=> 'Healing',
+    	'petarmor'		=> 'Pet Armor',
+    	'petegg'		=> 'Pet Egg',
+    	'shadowgear'	=> 'Shadow Equipment',
+    	'usable'		=> 'Usable',
+    	'weapon'		=> 'Weapon'
+    )
+    ?>
+  jobs.php: |-
+    <?php
+    return array(
+    	0    => 'Novice',
+    	1    => 'Swordsman',
+    	2    => 'Mage',
+    	3    => 'Archer',
+    	4    => 'Acolyte',
+    	5    => 'Merchant',
+    	6    => 'Thief',
+    	7    => 'Knight',
+    	8    => 'Priest',
+    	9    => 'Wizard',
+    	10   => 'Blacksmith',
+    	11   => 'Hunter',
+    	12   => 'Assassin',
+    	//13   => 'Knight (Mounted)',
+    	14   => 'Crusader',
+    	15   => 'Monk',
+    	16   => 'Sage',
+    	17   => 'Rogue',
+    	18   => 'Alchemist',
+    	19   => 'Bard',
+    	20   => 'Dancer',
+    	//21   => 'Crusader (Mounted)',
+    	22   => 'Wedding',
+    	23   => 'Super Novice',
+    	24   => 'Gunslinger',
+    	25   => 'Ninja',
+    	26   => 'Xmas',
+    	27   => 'Summer',
+    	28   => 'Hanbok',
+    	29   => 'Oktoberfest',
+    
+    	4001 => 'High Novice',
+    	4002 => 'High Swordsman',
+    	4003 => 'High Mage',
+    	4004 => 'High Archer',
+    	4005 => 'High Acolyte',
+    	4006 => 'High Merchant',
+    	4007 => 'High Thief',
+    	4008 => 'Lord Knight',
+    	4009 => 'High Priest',
+    	4010 => 'High Wizard',
+    	4011 => 'Whitesmith',
+    	4012 => 'Sniper',
+    	4013 => 'Assassin Cross',
+    	//4014 => 'Lord Knight (Mounted)',
+    	4015 => 'Paladin',
+    	4016 => 'Champion',
+    	4017 => 'Professor',
+    	4018 => 'Stalker',
+    	4019 => 'Creator',
+    	4020 => 'Clown',
+    	4021 => 'Gypsy',
+    	//4022 => 'Paladin (Mounted)',
+    
+    	4023 => 'Baby',
+    	4024 => 'Baby Swordsman',
+    	4025 => 'Baby Mage',
+    	4026 => 'Baby Archer',
+    	4027 => 'Baby Acolyte',
+    	4028 => 'Baby Merchant',
+    	4029 => 'Baby Thief',
+    	4030 => 'Baby Knight',
+    	4031 => 'Baby Priest',
+    	4032 => 'Baby Wizard',
+    	4033 => 'Baby Blacksmith',
+    	4034 => 'Baby Hunter',
+    	4035 => 'Baby Assassin',
+    	//4036 => 'Baby Knight (Mounted)',
+    	4037 => 'Baby Crusader',
+    	4038 => 'Baby Monk',
+    	4039 => 'Baby Sage',
+    	4040 => 'Baby Rogue',
+    	4041 => 'Baby Alchemist',
+    	4042 => 'Baby Bard',
+    	4043 => 'Baby Dancer',
+    	//4044 => 'Baby Crusader (Mounted)',
+    	4045 => 'Super Baby',
+        
+    	4046 => 'Taekwon',
+    	4047 => 'Star Gladiator',
+    	//4048 => 'Star Gladiator (Flying)',
+    	4049 => 'Soul Linker',
+    
+    	4050 => 'Jiang Shi',
+    	4051 => 'Death Knight',
+    	4052 => 'Dark Collector',
+    
+    	4054 => 'Rune Knight',
+    	4055 => 'Warlock',
+    	4056 => 'Ranger',
+    	4057 => 'Arch Bishop',
+    	4058 => 'Mechanic',
+    	4059 => 'Guillotine Cross',
+    	4060 => 'Rune Knight+',
+    	4061 => 'Warlock+',
+    	4062 => 'Ranger+',
+    	4063 => 'Arch Bishop+',
+    	4064 => 'Mechanic+',
+    	4065 => 'Guillotine Cross+',
+    	4066 => 'Royal Guard',
+    	4067 => 'Sorcerer',
+    	4068 => 'Minstrel',
+    	4069 => 'Wanderer',
+    	4070 => 'Sura',
+    	4071 => 'Genetic',
+    	4072 => 'Shadow Chaser',
+    	4073 => 'Royal Guard+',
+    	4074 => 'Sorcerer+',
+    	4075 => 'Minstrel+',
+    	4076 => 'Wanderer+',
+    	4077 => 'Sura+',
+    	4078 => 'Genetic+',
+    	4079 => 'Shadow Chaser+',
+    
+    	//4080 => 'Rune Knight (Mounted)',
+    	//4081 => 'Rune Knight+ (Mounted)',
+    	//4082 => 'Royal Guard (Mounted)',
+    	//4083 => 'Royal Guard+ (Mounted)',
+    	//4084 => 'Ranger (Mounted)',
+    	//4085 => 'Ranger+ (Mounted)',
+    	//4086 => 'Mechanic (Magic Gear)',
+    	//4087 => 'Mechanic+ (Magic Gear)',
+    
+    	4096 => 'Baby Rune Knight',
+    	4097 => 'Baby Warlock',
+    	4098 => 'Baby Ranger',
+    	4099 => 'Baby Arch Bishop',
+    	4100 => 'Baby Mechanic',
+    	4101 => 'Baby Guillotine Cross',
+    	4102 => 'Baby Royal Guard',
+    	4103 => 'Baby Sorcerer',
+    	4104 => 'Baby Minstrel',
+    	4105 => 'Baby Wanderer',
+    	4106 => 'Baby Sura',
+    	4107 => 'Baby Genetic',
+    	4108 => 'Baby Shadow Chaser',
+    	
+    	//4109 => 'Baby Rune Knight (Mounted)',
+    	//4110 => 'Baby Royal Guard (Mounted)',
+    	//4111 => 'Baby Ranger (Mounted)',
+    	//4112 => 'Baby Mechanic (Magic Gear)',
+    	
+    	4190 => 'Expanded Super Novice',
+    	4191 => 'Expanded Super Baby',
+    	
+    	4211 => 'Kagerou',
+    	4212 => 'Oboro',
+    	
+    	4215 => 'Rebellion',
+    	4218 => 'Summoner',
+    
+    	4220 => 'Baby Summoner',
+    	4222 => 'Baby Ninja',
+    	4223 => 'Baby Kagero',
+    	4224 => 'Baby Oboro',
+    	4225 => 'Baby Taekwon',
+    	4226 => 'Baby Star Gladiator',
+    	4227 => 'Baby Soul Linker',
+    	4228 => 'Baby Gunslinger',
+    	4229 => 'Baby Rebellion',
+    	//4238 => 'Baby Star Gladiator (Union)',
+    	
+    	//4238 => 'Baby Star Glad (Union)',
+    	4239 => 'Star Emperor',
+    	4240 => 'Soul Reaper',
+    	4241 => 'Baby Star Emperor',
+    	4242 => 'Baby Soul Reaper',
+    
+    	4252 => 'Dragon Knight',
+    	4253 => 'Meister',
+    	4254 => 'Shadow Cross',
+    	4255 => 'Arch Mage',
+    	4256 => 'Cardinal',
+    	4257 => 'WindHawk',
+    	4258 => 'Imperial Guard',
+    	4259 => 'Biolo',
+    	4260 => 'Abyss Chaser',
+    	4261 => 'Elemental Master',
+    	4262 => 'Inquisitor',
+    	4263 => 'Troubadour',
+    	4264 => 'Trouvere',
+    )
+    ?>
+  jobs_alchemist.php: |-
+    <?php
+    return array(
+    	18   => 'Alchemist',
+    	4019 => 'Creator',
+    	4041 => 'Baby Alchemist',
+    	4071 => 'Genetic',
+    	4078 => 'Genetic+',
+    	4107 => 'Baby Genetic',
+    	4259 => 'Biolo'
+    )
+    ?>
+  jobs_blacksmith.php: |-
+    <?php
+    return array(
+    	10   => 'Blacksmith',
+    	4011 => 'Whitesmith',
+    	4033 => 'Baby Blacksmith',
+    	4058 => 'Mechanic',
+    	4064 => 'Mechanic+',
+    	4100 => 'Baby Mechanic',
+    	4253 => 'Meister'
+    )
+    ?>
+  jobs_gender_linked.php: |-
+    <?php
+    return array(
+    	19   => 'Bard',
+    	20   => 'Dancer',
+    	4020 => 'Clown',
+    	4021 => 'Gypsy',
+    	4042 => 'Baby Bard',
+    	4043 => 'Baby Dancer',
+    	4068 => 'Minstrel',
+    	4069 => 'Wanderer',
+    	4075 => 'Minstrel+',
+    	4076 => 'Wanderer+',
+    	4104 => 'Baby Minstrel',
+    	4105 => 'Baby Wanderer',
+    	4211 => 'Kagerou',
+    	4212 => 'Oboro',
+    	4223 => 'Baby Kagerou',
+    	4224 => 'Baby Oboro',
+    	4263 => 'Troubadour',
+    	4264 => 'Trouvere'
+    )
+    ?>
+  loginerrors.php: |-
+    <?php
+    return array(
+    	0 => 'Unexpected Error',
+    	1 => 'Invalid Server',
+    	2 => 'Invalid Credentials',
+    	3 => 'Temporarily Banned',
+    	4 => 'Permanently Banned',
+    	5 => 'IP Banned',
+    	6 => 'Invalid Security Code',
+    	7 => 'Pending Confirmation'
+    )
+    ?>
+  monster_ai.php: |-
+    <?php
+    return array(
+    	'01'			=> array('mode_canattack', 'mode_canmove'),
+    	'02'			=> array('mode_canattack', 'mode_looter', 'mode_canmove'),
+    	'03'			=> array('mode_changetargetmelee', 'mode_canattack', 'mode_assist', 'mode_canmove'),
+    	'04'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_angry', 'mode_canattack', 'mode_aggressive', 'mode_canmove'),
+    	'05'			=> array('mode_changetargetchase', 'mode_canattack', 'mode_aggressive', 'mode_canmove'),
+    	'06'			=> array(),
+    	'07'			=> array('mode_changetargetmelee', 'mode_canattack', 'mode_assist', 'mode_looter', 'mode_canmove'),
+    	'08'			=> array('mode_targetweak', 'mode_changetargetchase', 'mode_changetargetmelee', 'mode_canattack', 'mode_aggressive', 'mode_canmove'),
+    	'09'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_canattack', 'mode_castsensoridle', 'mode_aggressive', 'mode_canmove'),
+    	'10'			=> array('mode_canattack', 'mode_aggressive'),
+    	'11'			=> array('mode_canattack', 'mode_aggressive'),
+    	'12'			=> array('mode_changetargetchase', 'mode_canattack', 'mode_aggressive', 'mode_canmove'),
+    	'13'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_canattack', 'mode_assist', 'mode_aggressive', 'mode_canmove'),
+    	//14			=> array(),
+    	//15			=> array(),
+    	//16			=> array(),
+    	'17'			=> array('mode_canattack', 'mode_castsensoridle', 'mode_canmove'),
+    	//18			=> array(),
+    	'19'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_canattack', 'mode_castsensoridle', 'mode_aggressive', 'mode_canmove'),
+    	'20'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_castsensorchase', 'mode_canattack', 'mode_castsensoridle', 'mode_aggressive', 'mode_canmove'),
+    	'21'			=> array('mode_changetargetchase', 'mode_changetargetmelee', 'mode_changechase', 'mode_castsensorchase', 'mode_canattack', 'mode_castsensoridle', 'mode_aggressive', 'mode_canmove'),
+    	//22			=> array(),
+    	//23			=> array(),
+    	'24'			=> array('mode_canattack', 'mode_norandomwalk', 'mode_canmove'),
+    	'25'			=> array('mode_canmove'),
+    	'26'			=> array('mode_randomtarget', 'mode_changetargetchase', 'mode_changetargetmelee', 'mode_changechase', 'mode_castsensorchase', 'mode_canattack', 'mode_castsensoridle', 'mode_aggressive', 'mode_canmove'),
+    	'27'			=> array('mode_randomtarget', 'mode_canattack', 'mode_aggressive'),
+    )
+    ?>
+  monstermode.php: |-
+    <?php
+    return array(
+    	'mode_aggressive'			=> 'Aggressive',
+    	'mode_angry'				=> 'Angry',
+    	'mode_assist'				=> 'Assist',
+    	'mode_canattack'			=> 'Can Attack',
+    	'mode_canmove'				=> 'Can Move',
+    	'mode_castsensorchase'		=> 'Cast Sensor Chase',
+    	'mode_castsensoridle'		=> 'Cast Sensor Idle',
+    	'mode_changechase'			=> 'Change Chase',
+    	'mode_changetargetchase'	=> 'Change Target Chase',
+    	'mode_changetargetmelee'	=> 'Change Target Melee',
+    	'mode_detector'				=> 'Detector',
+    	'mode_fixeditemdrop'		=> 'Fixed Item Drop',
+    	'mode_ignoremagic'			=> 'Ignore Magic', 
+    	'mode_ignoremelee'			=> 'Ignore Melee',
+    	'mode_ignoremisc'			=> 'Ignore Misc',
+    	'mode_ignoreranged'			=> 'Ignore Ranged',
+    	'mode_knockbackimmune'		=> 'Knockback Immune',
+    	'mode_looter'				=> 'Looter',
+    	'mode_mvp'					=> 'MVP',
+    	'mode_norandomwalk'			=> 'Plant',
+    	'mode_randomtarget'			=> 'Random Target',
+    	'mode_skillimmune'			=> 'Skill Immune',
+    	'mode_statusimmune'			=> 'Status Immune',
+    	'mode_targetweak'			=> 'Target Weak',
+    	'mode_teleportblock'		=> 'Teleport Block',
+    )
+    ?>
+  picktypes.php: |-
+    <?php
+    return array(
+    	'A' => 'Admin',
+    	'B' => 'Buy Store',
+    	'C' => 'Consumed',
+    	'D' => 'Stolen/Ganked',
+    	'E' => 'Mailed',
+    	'F' => 'Bound Retrieval',
+    	'G' => 'Guild Storage',
+    	//'H' => '',
+    	'I' => 'Auctioned',
+    	//'J' => '',
+    	'K' => 'Bank',
+    	'L' => 'Looted',
+    	'M' => 'Monster',
+    	'N' => 'NPC (Script)',
+    	'O' => 'Produced',
+    	'P' => 'Player',
+    	'Q' => 'Quest',
+    	'R' => 'Storage',
+    	'S' => 'NPC (Shop)',
+    	'T' => 'Traded',
+    	'U' => 'MVP',
+    	'V' => 'Vended',
+    	//'W' => '',
+    	'X' => 'Other',
+    	'Y' => 'Lottery',
+    	'Z' => 'Merged',
+    	'$' => 'Cash',
+    );
+    ?>
+  races.php: |-
+    <?php
+    // rA monster races.
+    return array(
+    	 'Formless'		=> 'Formless',
+    	 'Undead'		=> 'Undead',
+    	 'Brute'		=> 'Brute',
+    	 'Plant'		=> 'Plant',
+    	 'Insect'		=> 'Insect',
+    	 'Fish'			=> 'Fish',
+    	 'Demon'		=> 'Demon',
+    	 'Demihuman'	=> 'Demi-Human',
+    	 'Angel'		=> 'Angel',
+    	 'Dragon'		=> 'Dragon'
+    )
+    ?>
+  servers.php: |-
+    <?php
+    return array(
+    	// Example server configuration. You may have more arrays like this one to
+    	// specify multiple server groups (however they should share the same login
+    	// server whilst they are allowed to have multiple char/map pairs).
+    	array(
+    		'ServerName'     => '{{ .Values.configuration.serverName }}',
+    		// Global database configuration (excludes logs database configuration).
+    		'DbConfig'       => array(
+    			//'Socket'     => '/tmp/mysql.sock',
+    			//'Port'       => 3306,
+    			//'Encoding'   => 'utf8', // Connection encoding -- use whatever here your MySQL tables collation is.
+    			'Convert'    => 'utf8',
+    				// -- 'Convert' option only works when 'Encoding' option is specified and iconv (http://php.net/iconv) is available.
+    				// -- It specifies the encoding to convert your MySQL data to on the website (most likely needs to be utf8)
+    			'Hostname'   => '{{ .Values.configuration.servers.databases.config.host }}',
+    			'Username'   => '{{ .Values.configuration.servers.databases.config.username }}',
+    			'Password'   => '{{ .Values.configuration.servers.databases.config.password }}',
+    			'Database'   => '{{ .Values.configuration.servers.databases.config.database }}',
+    			'Persistent' => true,
+    			'Timezone'   => '{{ .Values.configuration.servers.databases.config.timezone }}', // Example: '+0:00' is UTC.
+    			// The possible values of 'Timezone' is as documented from the MySQL website:
+    			// "The value can be given as a string indicating an offset from UTC, such as '+10:00' or '-6:00'."
+    			// "The value can be given as a named time zone, such as 'Europe/Helsinki', 'US/Eastern', or 'MET'." (see below continuation!)
+    			// **"Named time zones can be used only if the time zone information tables in the mysql database have been created and populated."
+    		),
+    		// This is kept separate because many people choose to have their logs
+    		// database accessible under different credentials, and often on a
+    		// different server entirely to ensure the reliability of the log data.
+    		'LogsDbConfig'   => array(
+    			//'Socket'     => '/tmp/mysql.sock',
+    			//'Port'       => 3306,
+    			//'Encoding'   => null, // Connection encoding -- use whatever here your MySQL tables collation is.
+    			'Convert'    => 'utf8',
+    				// -- 'Convert' option only works when 'Encoding' option is specified and iconv (http://php.net/iconv) is available.
+    				// -- It specifies the encoding to convert your MySQL data to on the website (most likely needs to be utf8)
+    			'Hostname'   => '{{ .Values.configuration.servers.databases.log.host }}',
+    			'Username'   => '{{ .Values.configuration.servers.databases.log.username }}',
+    			'Password'   => '{{ .Values.configuration.servers.databases.log.password }}',
+    			'Database'   => '{{ .Values.configuration.servers.databases.log.database }}',
+    			'Persistent' => true,
+    			'Timezone'   => '{{ .Values.configuration.servers.databases.log.timezone }}' // Possible values is as described in the comment in DbConfig.
+    		),
+    		// Web server configuration.
+    		'WebDbConfig'    => array(
+    			'Hostname'   => '{{ .Values.configuration.servers.databases.web.host }}',
+    			'Username'   => '{{ .Values.configuration.servers.databases.web.username }}',
+    			'Password'   => '{{ .Values.configuration.servers.databases.web.password }}',
+    			'Database'   => '{{ .Values.configuration.servers.databases.web.database }}',
+    			'Persistent' => true
+    		),
+    		// Login server configuration.
+    		'LoginServer'    => array(
+    			'Address'  => '{{ .Values.configuration.servers.login_server.host }}',
+    			'Port'     => '{{ .Values.configuration.servers.login_server.port }}',
+    			'UseMD5'   => false,
+    			'NoCase'   => true, // rA account case-sensitivity; Default: Case-INsensitive (true).
+    			'GroupID'  => 0,    // Default account group ID during registration.
+    			//'Database' => 'ragnarok'
+    		),
+    		'CharMapServers' => array(
+    			array(
+    				'ServerName'      => '{{ .Values.configuration.serverName }}',
+    				'Renewal'         => true,
+    				'MaxCharSlots'    => 9,
+    				'DateTimezone'    => null, // Specifies game server's timezone for this char/map pair. (See: http://php.net/timezones)
+    				//'ResetDenyMaps'   => 'sec_pri', // Defaults to 'sec_pri'. This value can be an array of map names.
+    				//'Database'        => 'ragnarok', // Defaults to DbConfig.Database
+    				'ExpRates' => array(
+    					'Base'        => 100, // Rate at which (base) exp is given
+    					'Job'         => 100, // Rate at which job exp is given
+    					'Mvp'         => 100  // MVP bonus exp rate
+    				),
+    				'DropRates' => array(
+    					// If drop rate was below this amount and bonus is applied to it, the bonus can't make it exceed this amount.
+    					'DropRateCap' => 9000,
+    					// The rate the common items (in the ETC tab, besides card) are dropped
+    					'Common'      => 100,
+    					'CommonBoss'  => 100,
+    					'CommonMVP'   => 100,
+    					'CommonMin'   => 1,
+    					'CommonMax'   => 10000,
+    					// The rate healing items (that restore HP or SP) are dropped
+    					'Heal'        => 100,
+    					'HealBoss'    => 100,
+    					'HealMVP'     => 100,
+    					'HealMin'     => 1,
+    					'HealMax'     => 10000,
+    					// The rate usable items (in the item tab other then healing items) are dropped
+    					'Useable'     => 100,
+    					'UseableBoss' => 100,
+    					'UseableMVP'  => 100,
+    					'UseableMin'  => 1,
+    					'UseableMax'  => 10000,
+    					// The rate at which equipment is dropped
+    					'Equip'       => 100,
+    					'EquipBoss'   => 100,
+    					'EquipMVP'    => 100,
+    					'EquipMin'    => 1,
+    					'EquipMax'    => 10000,
+    					// The rate at which cards are dropped
+    					'Card'        => 100,
+    					'CardBoss'    => 100,
+    					'CardMVP'     => 100,
+    					'CardMin'     => 1,
+    					'CardMax'     => 10000,
+    					// The rate adjustment for the MVP items that the MVP gets directly in their inventory
+    					'MvpItem'     => 100,
+    					'MvpItemMin'  => 1,
+    					'MvpItemMax'  => 10000,
+    					// 0 - official order (Show message "Note: Only one MVP drop will be rewarded.") , 2 - all items
+    					'MvpItemMode' => 0,
+    				),
+    				'CharServer'      => array(
+    					'Address'     => '{{ .Values.configuration.servers.char_server.host }}',
+    					'Port'        => '{{ .Values.configuration.servers.char_server.port }}'
+    				),
+    				'MapServer'       => array(
+    					'Address'     => '{{ .Values.configuration.servers.map_server.host }}',
+    					'Port'        => '{{ .Values.configuration.servers.map_server.port }}'
+    				),
+    				// -- WoE days and times --
+    				// First parameter: Starding day 0=Sunday / 1=Monday / 2=Tuesday / 3=Wednesday / 4=Thursday / 5=Friday / 6=Saturday
+    				// Second parameter: Starting hour in 24-hr format.
+    				// Third paramter: Ending day (possible value is same as starting day).
+    				// Fourth (final) parameter: Ending hour in 24-hr format.
+    				// ** (Note, invalid times are ignored silently.)
+    				'WoeDayTimes'   => array(
+    					//array(0, '12:00', 0, '14:00'), // Example: Starts Sunday 12:00 PM and ends Sunday 2:00 PM
+    					//array(3, '14:00', 3, '15:00')  // Example: Starts Wednesday 2:00 PM and ends Wednesday 3:00 PM
+    				),
+    				// Modules and/or actions to disallow access to during WoE.
+    				'WoeDisallow'   => array(
+    					array('module' => 'character', 'action' => 'online'),  // Disallow access to "Who's Online" page during WoE.
+    					array('module' => 'character', 'action' => 'mapstats') // Disallow access to "Map Statistics" page during WoE.
+    				)
+    			)
+    		)
+    	)
+    );
+    ?>
+  shopcategories.php: |-
+    <?php
+    // These are categories for the item shop. Pay close attention to the numbers,
+    // as these numbers are stored in the database when you add an item to a specific
+    // category, so it knows which category the item belongs to.
+    // You may add/remove categories from here as you see fit.
+    return array(
+    	0 => 'Headgears',      // Headgears category, most likely doesn't include wings.
+    	1 => 'Wings',          // Wings category, though most of the time wings are headgear, this is more dedicated.
+    	2 => 'Armors',         // Armors category, most likely doesn't include headgears.
+    	3 => 'Weapons',        // Weapons category.
+    	4 => 'Healing Items',  // Good category to place healing items under, e.g., Yggdrasil Berries and the like.
+    	5 => 'Pets',           // Some people may choose to sell pet eggs or pet-related items under here.
+    	6 => 'Miscellaneous',  // Anything you can't really categorize, you can put under this category.
+    	7 => 'Cards'           // Cards category.
+    );
+    ?>
+  sizes.php: |-
+    <?php
+    // rA monster sizes.
+    return array(
+    	 'Small' => 'Small',
+    	 'Medium' => 'Medium',
+    	 'Large' => 'Large'
+    )
+    ?>
+  trade_restrictions.php: |-
+    <?php
+    return array(
+    	'trade_nodrop'			=> 'Can\'t be dropped',
+    	'trade_notrade'			=> 'Can\'t be traded with player',
+    	'trade_tradepartner'	=> 'Can\'t be traded with partner',
+    	'trade_nosell'			=> 'Can\'t be sold to NPC',
+    	'trade_nocart'			=> 'Can\'t be put in Cart',
+    	'trade_nostorage'		=> 'Can\'t be put in Storage',
+    	'trade_noguildstorage'	=> 'Can\'t be put in Guild Storage',
+    	'trade_nomail'			=> 'Can\'t be attached in Mail',
+    	'trade_noauction'		=> 'Can\'t be auctioned'
+    )
+    ?>

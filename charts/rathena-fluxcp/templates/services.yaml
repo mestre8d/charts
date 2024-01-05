@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    package: "https://github.com/Filipe-Souza/fluxcp-helm/"
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-flux-cp"
+  ports:
+    - name: flux-cp
+      port: {{ .Values.service.port }}
+      protocol: TCP
+      targetPort: {{ .Values.service.container.port }}
+  type: {{ .Values.service.type }}

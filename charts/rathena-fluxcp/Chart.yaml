@@ -1,0 +1,23 @@
+apiVersion: v2
+name: fluxcp-helm
+version: 0.0.0
+description: This chart can provide an FluxCP installation on a Kubernetes cluster.
+type: application
+keywords:
+  - mmo
+  - fluxcp
+  - FluxCP
+  - rathena
+  - rAthena
+  - emulator
+home: https://github.com/mestre8d/charts
+sources:
+  - https://github.com/mestre8d/charts/tree/main/charts/rathena-fluxcp
+  - https://github.com/Filipe-Souza/rathena-fluxcp-docker
+maintainers:
+  - name: Filipe Souza
+    email: filipe.souza@mestre8d.com
+    url: https://github.com/Filipe-Souza
+icon: https://github.com/rathena/rathena/blob/master/doc/logo.png
+appVersion: "latest"
+deprecated: false
