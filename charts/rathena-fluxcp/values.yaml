@@ -1,0 +1,64 @@
+replicaCount: 1
+image:
+  name: ghcr.io/filipe-souza/rathena-fluxcp
+  tag: v0.0.1
+  imagePullPolicy: Always
+  imagePullSecrets:
+    - name: registry-auth
+labels: {}
+annotations: {}
+storage:
+  labels: {}
+  annotations: {}
+  storageClassName: local-path
+  size: 10Gi
+  accessModes:
+    - ReadWriteMany
+configuration:
+  serverName: FluxRO
+  baseUri: /
+  installerPassword: 1234
+  serverAddress: localhost
+  servers:
+    login_server:
+      host: 127.0.0.1
+      port: 6900
+    map_server:
+      host: 127.0.0.1
+      port: 6121
+    char_server:
+      host: 127.0.0.1
+      port: 5121
+    databases:
+      config:
+        host: 127.0.0.1
+        username: ragnarok
+        password: ragnarok
+        database: ragnarok
+        timezone: +0:00
+      log:
+        host: 127.0.0.1
+        username: ragnarok
+        password: ragnarok
+        database: ragnarok
+        timezone: +0:00
+      web:
+        host: 127.0.0.1
+        username: ragnarok
+        password: ragnarok
+        database: ragnarok
+service:
+  labels: {}
+  annotations: {}
+  port: 80
+  container:
+    port: 80
+  type: ClusterIP
+ingress:
+  enabled: false
+  labels: {}
+  annotations: {}
+  ingressClassName:
+  tls: []
+
+
