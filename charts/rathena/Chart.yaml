@@ -8,9 +8,10 @@ keywords:
   - rathena
   - rAthena
   - emulator
-home: https://github.com/Filipe-Souza/rathena-helm
+home: https://github.com/mestre8d/charts
 sources:
-  - https://github.com/Filipe-Souza/rathena-helm
+  - https://github.com/mestre8d/charts/tree/main/charts/rathena
+  - https://github.com/Filipe-Souza/rathena-docker
 maintainers:
   - name: Filipe Souza
     email: filipe.souza@mestre8d.com

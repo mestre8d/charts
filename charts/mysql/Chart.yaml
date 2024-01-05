@@ -10,7 +10,12 @@ keywords:
 home: https://www.mysql.com/
 icon: https://www.mysql.com/common/logos/logo-mysql-170x115.png
 sources:
-- https://github.com/kubernetes/charts
-- https://github.com/docker-library/mysql
+  - https://github.com/mestre8d/charts/tree/main/charts/mysql
+  - https://github.com/kubernetes/charts
+  - https://github.com/docker-library/mysql
+maintainers:
+  - name: Filipe Souza
+    email: filipe.souza@mestre8d.com
+    url: https://github.com/Filipe-Souza
 deprecated: true
 engine: gotpl
