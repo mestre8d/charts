@@ -76,4 +76,14 @@ data:
     map_port: {{ .Values.servers.mapServer.service.port }}
   packet_conf.txt: ''
   script_conf.txt: ''
-  web_conf.txt: ''
+  web_conf.txt: |
+    //bind_ip: 127.0.0.1
+    web_port: 8888
+    //timestamp_format: [%d/%b %H:%M]
+    stdout_with_ansisequence: no
+    console_msg_log: 0
+    console_log_filepath: ./log/web-msg_log.log
+    console_silent: 0
+    print_req_res: off
+    allow_gifs: yes
+

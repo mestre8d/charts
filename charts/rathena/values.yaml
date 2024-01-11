@@ -1,9 +1,10 @@
+namespace: rathena
 image:
   imagePullPolicy: Always
   imagePullSecrets:
   - name: registry-auth
   name: ghcr.io/filipe-souza/rathena
-  tag: v0.0.2
+  tag: v0.0.1-alpine
 replicaCount: 1
 databases:
   main:
@@ -85,3 +86,19 @@ servers:
     auth:
       passwd: p1
       userid: s1
+  webServer:
+    enable: false
+    # -- Number of replicas of this pod
+    replicas: 1
+    livenessProbe:
+      # -- Delay to start probing the pod
+      initialDelaySeconds: 30
+      # -- Delay between probes on the pod
+      periodSeconds: 60
+    service:
+      # -- Enable/disables the creation of the service
+      create: true
+      # -- Port that service will be listening
+      port: 8888
+      # -- Type of service.
+      type: ClusterIP
