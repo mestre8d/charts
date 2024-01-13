@@ -51,6 +51,31 @@ entries:
   rathena-helm:
   - apiVersion: v2
     appVersion: latest
+    created: "2024-01-13T17:24:48.492150806Z"
+    description: This chart can provide an rAthena emulator installation on a Kubernetes
+      cluster.
+    digest: 8e5a0a73c5f91b829bd1e47615f3db5d40af431bbbce473ed999dd6bb889e523
+    home: https://github.com/mestre8d/charts
+    icon: https://github.com/rathena/rathena/blob/master/doc/logo.png
+    keywords:
+    - mmo
+    - rathena
+    - rAthena
+    - emulator
+    maintainers:
+    - email: filipe.souza@mestre8d.com
+      name: Filipe Souza
+      url: https://github.com/Filipe-Souza
+    name: rathena-helm
+    sources:
+    - https://github.com/mestre8d/charts/tree/main/charts/rathena
+    - https://github.com/Filipe-Souza/rathena-docker
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/rathena-helm-0.0.3/rathena-helm-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: latest
     created: "2024-01-05T19:14:31.08581992Z"
     description: This chart can provide an rAthena emulator installation on a Kubernetes
       cluster.
@@ -98,4 +123,4 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/rathena-helm-0.0.1/rathena-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2024-01-05T19:14:31.085829478Z"
+generated: "2024-01-13T17:24:48.49216325Z"
