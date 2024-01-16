@@ -98,7 +98,7 @@ servers:
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
-      port: 5121
+      port: 5999
       # -- Type of service.
       type: ClusterIP
   # -- Configures the credentials to be stored into the config files for the inter-server authentication.
