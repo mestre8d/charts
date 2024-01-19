@@ -81,6 +81,27 @@ servers:
       port: 5121
       # -- Type of service.
       type: ClusterIP
+  proxyServer:
+    # -- Enables the websocket proxy service, allowing the usage of roBrowser clients.
+    enable: true
+    image:
+      name: ghcr.io/filipe-souza/rathena
+      tag: wsproxy
+      imagePullPolicy: Always
+    # -- Number of replicas of this pod
+    replicas: 1
+    livenessProbe:
+      # -- Delay to start probing the pod
+      initialDelaySeconds: 30
+      # -- Delay between probes on the pod
+      periodSeconds: 60
+    service:
+      # -- Enable/disables the creation of the service
+      create: true
+      # -- Port that service will be listening
+      port: 5999
+      # -- Type of service.
+      type: ClusterIP
   # -- Configures the credentials to be stored into the config files for the inter-server authentication.
   interServer:
     auth:
