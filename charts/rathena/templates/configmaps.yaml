@@ -8,7 +8,8 @@ metadata:
     {{- end }}
 data:
   atcommands.yml: ''
-  battle_conf.txt: ''
+  battle_conf.txt: |
+    feature.refineui: off
   char_conf.txt: |
     userid: {{ .Values.servers.interServer.auth.userid }}
     passwd: {{ .Values.servers.interServer.auth.passwd }}
