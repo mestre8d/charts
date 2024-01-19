@@ -82,6 +82,7 @@ servers:
       # -- Type of service.
       type: ClusterIP
   proxyServer:
+    # -- Enables the websocket proxy service, allowing the usage of roBrowser clients.
     enable: true
     image:
       name: ghcr.io/filipe-souza/rathena
