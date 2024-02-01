@@ -20,6 +20,27 @@ This chart will provide a Palworld server installation on a kubernetes cluster.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| api.annotations | object | `{}` | Additional annotations to the resources |
+| api.attach_to_game_server | bool | `false` | Set this to true to create a container within the game server deployment with the same parameters. |
+| api.config | dict |  | Change the API server configuration. Those are directly connected with the container image, providing multiple environment variables to the scripts. |
+| api.config.bearer_token | string | `""` | The bearer token to be used in authenticated requests. |
+| api.config.info_cache_duration | number | `5000` | The TTL of the cached information for the /info endpoint, in milliseconds. |
+| api.config.port | number | `3000` | The API container port. This port will be present on the service, deployment and configmap. |
+| api.config.query_port | number | `27015` | The RCON port. |
+| api.config.rcon_password | string | `""` | The RCON password. |
+| api.config.server_host | string | `""` | The RCON server hostname. |
+| api.enabled | bool | `true` | Enables the of the API components. |
+| api.image | dict |  | Define the parameters for the server image container |
+| api.image.imagePullPolicy | string | `"IfNotPresent"` | Define the pull policy for the server image. |
+| api.image.name | string | `"valamidev/palworld-rcon-buddy"` | Name of the image, without the tag. |
+| api.image.tag | string | `"latest"` | The tag of the image. |
+| api.labels | object | `{}` | Additional labels to the resources |
+| api.service.annotations | object | `{}` | Additional annotations to the resources |
+| api.service.enabled | bool | `true` | Enables the creation of the service component. |
+| api.service.labels | object | `{}` | Additional labels to the resources |
+| api.service.port | number | `80` | Port number on the service. |
+| api.service.protocol | string | `"TCP"` | The protocol of the service port. |
+| api.service.type | string | `"ClusterIP"` | The type of service to be created. |
 | namespace | string | `"palworld"` | Namespace where the resources will be created |
 | server | dict |  | The server configuration |
 | server.annotations | object | `{}` | Additional annotations to the resources |
@@ -54,7 +75,6 @@ This chart will provide a Palworld server installation on a kubernetes cluster.
 | server.service | dict |  | Change the service configuration. If you change those, make sure to change the server.config and server.ports accordingly. |
 | server.service.annotations | object | `{}` | Additional annotations to the resources |
 | server.service.enabled | bool | `true` | Enables the creation of the service component. |
-| server.service.healthz | dict | `{"enabled":false,"name":"healthz","port":80,"protocol":"TCP","targetPort":80}` | The "healthz" definition . Use if you need to create a TCP health check for load balancers on cloud services. |
 | server.service.labels | object | `{}` | Additional labels to the resources |
 | server.service.ports | dict |  | Change the ports to be mapped to the service. If you change those, make sure to change the server.config and server.ports accordingly. |
 | server.service.ports[0] | dict | `{"name":"game","port":8211,"protocol":"UDP","targetPort":8211}` | The "game" port definition. If you change this, make sure to change the server.ports.game and server.config.port accordingly. |
