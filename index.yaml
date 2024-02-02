@@ -51,6 +51,30 @@ entries:
   palworld:
   - apiVersion: v2
     appVersion: latest
+    created: "2024-02-02T05:45:17.012089543Z"
+    description: This chart will provide a Palworld server installation on a kubernetes
+      cluster.
+    digest: c0808e1ba010f526fd1a89bf496e5b3a988efb3be54901c7f5d4938c323a28cc
+    home: https://github.com/thijsvanloef/palworld-server-docker
+    icon: https://cdn.akamai.steamstatic.com/steam/apps/1623730/header.jpg
+    keywords:
+    - palworld
+    - server
+    - kubernetes
+    - helm
+    maintainers:
+    - email: filipe.souza@mestre8d.com
+      name: Filipe Souza
+      url: https://github.com/Filipe-Souza
+    name: palworld
+    sources:
+    - https://github.com/thijsvanloef/palworld-server-docker
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/palworld-0.0.3/palworld-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: latest
     created: "2024-02-01T16:22:56.391203472Z"
     description: This chart will provide a Palworld server installation on a kubernetes
       cluster.
@@ -173,4 +197,4 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/rathena-helm-0.0.1/rathena-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2024-02-01T16:22:56.391219912Z"
+generated: "2024-02-02T05:45:17.012107145Z"
