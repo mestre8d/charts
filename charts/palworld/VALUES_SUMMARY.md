@@ -21,7 +21,7 @@ This chart will provide a Palworld server installation on a kubernetes cluster.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | api.annotations | object | `{}` | Additional annotations to the resources |
-| api.attach_to_game_server | bool | `false` | Set this to true to create a container within the game server deployment with the same parameters. |
+| api.attach_to_game_server | bool | `false` | Set this to true to create a container within the game server deployment with the same parameters. A new port will be added to the game server service if this is enabled. |
 | api.config | dict |  | Change the API server configuration. Those are directly connected with the container image, providing multiple environment variables to the scripts. |
 | api.config.bearer_token | string | `""` | The bearer token to be used in authenticated requests. |
 | api.config.info_cache_duration | number | `5000` | The TTL of the cached information for the /info endpoint, in milliseconds. |

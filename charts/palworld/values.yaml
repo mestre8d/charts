@@ -204,6 +204,7 @@ api:
   # -- (bool) Enables the of the API components.
   enabled: true
   # -- (bool) Set this to true to create a container within the game server deployment with the same parameters.
+  # A new port will be added to the game server service if this is enabled.
   attach_to_game_server: false
   # -- Additional annotations to the resources
   annotations: { }
