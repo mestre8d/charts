@@ -22,6 +22,12 @@ spec:
   selector:
     app.kubernetes.io/component: "{{ .Release.Name }}-server"
   ports:
+    {{ if .Values.api.attach_to_game_server }}
+    - name: api
+      port: {{ .Values.api.service.port }}
+      protocol: {{ .Values.api.service.protocol }}
+      targetPort: {{ .Values.api.config.port }}
+    {{ end }}
     {{- with .Values.server.service.ports }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
