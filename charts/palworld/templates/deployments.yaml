@@ -30,7 +30,7 @@ spec:
       containers:
         {{ if .Values.api.attach_to_game_server }}
         - name: api
-          image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
+          image: "{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.imagePullPolicy }}
           envFrom:
             - configMapRef:
