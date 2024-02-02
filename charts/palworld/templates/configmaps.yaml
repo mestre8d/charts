@@ -49,3 +49,32 @@ data:
   {{- toYaml . | nindent 2  }}
   {{- end }}
   {{ end }}
+---
+{{ if .Values.api.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-api-env-config"
+  annotations:
+    {{- with .Values.api.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-api-env-config"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-api-env-config"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.api.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  PALWORLD_SERVER_IP_ADDRESS: "{{ .Values.api.config.server_host }}"
+  PALWORLD_RCON_PORT:  "{{ .Values.api.config.rcon_port }}"
+  PALWORLD_RCON_PASSWORD: "{{ .Values.api.config.rcon_password }}"
+  INFO_CACHE_DURATION_MS: "{{ .Values.api.config.info_cache_duration }}"
+  BEARER_TOKEN: "{{ .Values.api.config.bearer_token }}"
+  PORT: "{{ .Values.api.config.port }}"
+{{ end }}

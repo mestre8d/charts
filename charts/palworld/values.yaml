@@ -71,14 +71,6 @@ server:
     labels: { }
     # -- (string) The type of service to be created.
     type: LoadBalancer
-    # -- (dict) The "healthz" definition .
-    # Use if you need to create a TCP health check for load balancers on cloud services.
-    healthz:
-      enabled: false
-      name: healthz
-      port: 80
-      protocol: TCP
-      targetPort: 80
     # -- (dict) Change the ports to be mapped to the service.
     # If you change those, make sure to change the server.config and server.ports accordingly.
     # @notationType -- bigValue
@@ -208,3 +200,52 @@ server:
       REGION: ""
       USEAUTH: "True"
       BAN_LIST_URL: "https://api.palworldgame.com/api/banlist.txt"
+api:
+  # -- (bool) Enables the of the API components.
+  enabled: true
+  # -- (bool) Set this to true to create a container within the game server deployment with the same parameters.
+  # A new port will be added to the game server service if this is enabled.
+  attach_to_game_server: false
+  # -- Additional annotations to the resources
+  annotations: { }
+  # -- Additional labels to the resources
+  labels: { }
+  # -- (dict) Define the parameters for the server image container
+  # @notationType -- bigValue
+  image:
+    # -- Name of the image, without the tag.
+    name: valamidev/palworld-rcon-buddy
+    # -- The tag of the image.
+    tag: latest
+    # -- Define the pull policy for the server image.
+    imagePullPolicy: IfNotPresent
+  # -- (dict) Change the API server configuration.
+  # Those are directly connected with the container image, providing multiple environment variables to the scripts.
+  # @notationType -- bigValue
+  config:
+    # -- (string) The RCON server hostname.
+    server_host: ""
+    rcon_port: 25575
+    # -- (string) The RCON password.
+    rcon_password: ""
+    # -- (number) The RCON port.
+    query_port: 27015
+    # -- (number) The TTL of the cached information for the /info endpoint, in milliseconds.
+    info_cache_duration: 5000
+    # -- (string) The bearer token to be used in authenticated requests.
+    bearer_token: ""
+    # -- (number) The API container port. This port will be present on the service, deployment and configmap.
+    port: 3000
+  service:
+    # -- (bool) Enables the creation of the service component.
+    enabled: true
+    # -- Additional annotations to the resources
+    annotations: { }
+    # -- Additional labels to the resources
+    labels: { }
+    # -- (string) The type of service to be created.
+    type: ClusterIP
+    # -- (number) Port number on the service.
+    port: 80
+    # -- (string) The protocol of the service port.
+    protocol: TCP

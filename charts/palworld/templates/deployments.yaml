@@ -28,13 +28,16 @@ spec:
         {{- end }}
     spec:
       containers:
-        {{ if .Values.server.service.healthz.enabled }}
-        - name: healthz
-          image: "chussenot/tiny-server:latest"
-          imagePullPolicy: {{ .Values.server.image.imagePullPolicy }}
+        {{ if .Values.api.attach_to_game_server }}
+        - name: api
+          image: "{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: "{{ .Release.Name }}-api-env-config"
           ports:
-            - name: healthz
-              containerPort: 80
+            - name: api
+              containerPort: {{ .Values.api.config.port }}
               protocol: TCP
         {{ end }}
         - name: server
@@ -68,3 +71,45 @@ spec:
             {{ else }}
             claimName: "{{ .Values.server.storage.externalName }}"
             {{ end }}
+---
+{{ if .Values.api.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-api"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-api"
+  strategy:
+    type: "{{ .Values.server.strategy }}"
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.server.annotations }}
+        {{- toYaml . | nindent 4 }}
+        {{- end }}
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-api"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-api"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- with .Values.api.labels }}
+        {{- toYaml . | nindent 4 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: "{{ .Release.Name }}-api-env-config"
+          ports:
+            - name: "api"
+              containerPort: 3000
+              protocol: TCP
+        {{ end }}
