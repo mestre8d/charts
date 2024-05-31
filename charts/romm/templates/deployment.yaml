@@ -88,6 +88,9 @@ spec:
               mountPath: /romm/resources
             - name: "{{ .Release.Name }}-library"
               mountPath: /romm/library
+              {{ if and .Values.storage.library.persist (.Values.storage.library.hostPath) }}
+              readOnly: true
+              {{ end }}
       volumes:
         - name: "{{ .Release.Name }}-config"
           configMap:
