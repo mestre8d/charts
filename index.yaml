@@ -197,4 +197,28 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/rathena-helm-0.0.1/rathena-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2024-02-02T05:45:17.012107145Z"
+  romm-helm:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2024-05-31T02:45:44.594790364Z"
+    description: This chart can provide a rommapp/romm installation on a Kubernetes
+      cluster.
+    digest: d38833d077e3f531ed71588123b62b1043ef6d30fe307c8f967d98f3ea31addb
+    home: https://github.com/mestre8d/charts
+    icon: https://github.com/rommapp/romm/raw/release/.github/resources/romm_complete.svg
+    keywords:
+    - emulator
+    - library
+    maintainers:
+    - email: filipe.souza@mestre8d.com
+      name: Filipe Souza
+      url: https://github.com/Filipe-Souza
+    name: romm-helm
+    sources:
+    - https://github.com/mestre8d/charts/tree/main/charts/romm
+    - https://github.com/rommapp/romm
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/romm-helm-0.0.1/romm-helm-0.0.1.tgz
+    version: 0.0.1
+generated: "2024-05-31T02:45:44.594810612Z"
