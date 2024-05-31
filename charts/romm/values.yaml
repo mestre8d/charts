@@ -1,0 +1,106 @@
+# -- Container image parameters for the romm server
+image:
+  imagePullSecrets: []
+  imagePullPolicy: Always
+  name: rommapp/romm
+  tag: 3.1.0
+replicaCount: 1
+annotations: {}
+labels: {}
+# -- Server configuration block
+server:
+  annotations: {}
+  labels: {}
+  # -- Allows configuring the romm app and also set up some environment credentials here.
+  # @bigValue
+  configuration:
+    # -- Insert here the config.yaml parameters for the romm.
+    config: ""
+    # -- Allows configuring the romm app database credentials.
+    # @bigValue
+    database:
+      # -- Main database host address
+      host: ""
+      # -- Main database host port
+      port: "3306"
+      # -- Main database username
+      username: ""
+      # -- Main database password
+      password: ""
+      # -- Main database schema name
+      name: ""
+    # -- The IGDB client ID to be stored on a secret. Should be a text plain value.
+    igdbClientId: ""
+    # -- The IGDB client secret to be stored on a secret. Should be a text plain value.
+    igdbClientSecret: ""
+    # -- The MobyAPI key to be stored on a secret. Should be a text plain value.
+    mobyApiKey: ""
+    # -- The secret key for the romm app. You can generate one with the command 'openssl rand -hex 32'
+    secretKey: ""
+    # -- The initial username of the romm app.
+    initialUsername: "admin"
+    # -- The initial password for the initial user of the romm app.
+    initialPassword: ""
+  # -- Allows controlling the service creation and parameters.
+  service:
+    annotations: {}
+    labels: {}
+    # -- Enable/disables the creation of the service
+    create: true
+    # -- Port that service will be listening
+    port: 9080
+    # -- Type of service.
+    type: ClusterIP
+  livenessProbe:
+    # -- Delay to start probing the pod
+    initialDelaySeconds: 30
+    # -- Delay between probes on the pod
+    periodSeconds: 60
+  ingress:
+    annotations: {}
+    labels: {}
+    # -- Enable/disables the creation of the Ingress
+    create: false
+    # -- The ingress class name
+    ingressClassName: ""
+    # -- Multiple paths configuration.
+    paths: []
+    # -- Default path configuration
+    path: "/"
+    hostName: ""
+    resourceRootUrl: ""
+    # TLS secret configuration
+    tls: {}
+storage:
+  resources:
+    annotations: {}
+    labels: {}
+    # -- Enable/disable the persistence of resources data directory.
+    persist: false
+    # -- The size of the PV for the resources' directory.
+    size: 2G
+    # -- The storage class name to be set up on the PV
+    storageClassName: ""
+  assets:
+    annotations: {}
+    labels: {}
+    # -- Enable/disable the persistence of assets directory.
+    persist: false
+    # -- The size of the PV for the assets' directory.
+    size: 2G
+    # -- The storage class name to be set up on the PV
+    storageClassName: ""
+  library:
+    annotations: {}
+    labels: {}
+    # -- Enable/disable the persistence of library directory.
+    persist: true
+    # -- Allows using a node host path to hold the library.
+    # The storage.library.persist should be true for this to work.
+    # If storage.library.persist is true and this is empty, a PVC will be created.
+    hostPath: ""
+    # -- The size of the PV for the library directory. Ignored if storage.library.hostPath is used.
+    size: 32G
+    # -- The storage class name to be set up on the PV
+    storageClassName: ""
+

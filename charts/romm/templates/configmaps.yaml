@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-config"
+  {{- with .Values.server.labels }}
+  labels:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+  {{- with .Values.server.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+data:
+  config.yml: |
+    {{ .Values.server.configuration.config }}
