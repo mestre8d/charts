@@ -12,4 +12,4 @@ metadata:
   {{- end }}
 data:
   config.yml: |
-    {{ .Values.server.configuration.config }}
+    {{ toYaml .Values.server.configuration.config | nindent 6 }}
