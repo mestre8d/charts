@@ -200,6 +200,29 @@ entries:
   romm-helm:
   - apiVersion: v2
     appVersion: latest
+    created: "2024-06-04T18:51:33.509658046Z"
+    description: This chart can provide a rommapp/romm installation on a Kubernetes
+      cluster.
+    digest: 735407a63aeaa550bb39da9a343e72a26505a5c64038b10c5acb4439dd354aed
+    home: https://github.com/mestre8d/charts
+    icon: https://github.com/rommapp/romm/raw/release/.github/resources/romm_complete.svg
+    keywords:
+    - emulator
+    - library
+    maintainers:
+    - email: filipe.souza@mestre8d.com
+      name: Filipe Souza
+      url: https://github.com/Filipe-Souza
+    name: romm-helm
+    sources:
+    - https://github.com/mestre8d/charts/tree/main/charts/romm
+    - https://github.com/rommapp/romm
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/romm-helm-0.0.3/romm-helm-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: latest
     created: "2024-05-31T04:04:36.020115786Z"
     description: This chart can provide a rommapp/romm installation on a Kubernetes
       cluster.
@@ -244,4 +267,4 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/romm-helm-0.0.1/romm-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2024-05-31T04:04:36.020149497Z"
+generated: "2024-06-04T18:51:33.509677423Z"
