@@ -1,0 +1,21 @@
+apiVersion: v1
+name: mysql
+version: 0.0.0
+appVersion: 5.7.30
+description: Fast, reliable, scalable, and easy to use open-source relational database system.
+keywords:
+- mysql
+- database
+- sql
+home: https://www.mysql.com/
+icon: https://www.mysql.com/common/logos/logo-mysql-170x115.png
+sources:
+  - https://github.com/mestre8d/charts/tree/main/charts/mysql
+  - https://github.com/kubernetes/charts
+  - https://github.com/docker-library/mysql
+maintainers:
+  - name: Filipe Souza
+    email: filipe.souza@mestre8d.com
+    url: https://github.com/Filipe-Souza
+deprecated: true
+engine: gotpl

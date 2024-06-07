@@ -1,0 +1,90 @@
+{{ if .Values.storage.resources.persist }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ .Release.Name }}-resources"
+  {{- with .Values.storage.resources.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-resources"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-pvc-resources"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.storage.resources.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.resources.size }}
+  {{ with .Values.storage.resources.storageClassName }}
+  storageClassName: {{ . }}
+  {{ end }}
+{{ end }}
+{{ if .Values.storage.assets.persist }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ .Release.Name }}-assets"
+  {{- with .Values.storage.assets.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-assets"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-pvc-assets"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.storage.assets.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.assets.size }}
+  {{ with .Values.storage.assets.storageClassName }}
+  storageClassName: {{ . }}
+  {{ end }}
+{{ end }}
+{{ if and .Values.storage.library.persist (not .Values.storage.library.hostPath) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ .Release.Name }}-library"
+  {{- with .Values.storage.library.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-library"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-pvc-library"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.storage.library.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.library.size }}
+  {{ with .Values.storage.library.storageClassName }}
+  storageClassName: {{ . }}
+  {{ end }}
+{{ end }}

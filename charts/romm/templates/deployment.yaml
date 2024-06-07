@@ -1,0 +1,130 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-server"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-server"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-server"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-server"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: romm
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: {{ .Values.server.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.livenessProbe.periodSeconds }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "db_host"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "db_name"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "db_user"
+            - name: DB_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "db_password"
+            - name: IGDB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "igdb_client_id"
+            - name: IGDB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "igdb_client_secret"
+            - name: MOBYGAMES_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "moby_api_key"
+            - name: ROMM_AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "secret_key"
+            - name: ROMM_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "initial_username"
+            - name: ROMM_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Release.Name }}-secrets"
+                  key: "initial_password"
+          volumeMounts:
+            - name: "{{ .Release.Name }}-config"
+              mountPath: /romm/config
+            - name: "{{ .Release.Name }}-assets"
+              mountPath: /romm/assets
+            - name: "{{ .Release.Name }}-resources"
+              mountPath: /romm/resources
+            - name: "{{ .Release.Name }}-library"
+              mountPath: /romm/library
+              {{ if and .Values.storage.library.persist (.Values.storage.library.hostPath) }}
+              readOnly: true
+              {{ end }}
+      volumes:
+        - name: "{{ .Release.Name }}-config"
+          configMap:
+            name: "{{ .Release.Name }}-config"
+        - name: "{{ .Release.Name }}-resources"
+          {{ with .Values.storage.resources }}
+          {{ if .persist }}
+          persistentVolumeClaim:
+            claimName: "{{ $.Release.Name }}-resources"
+          {{ else }}
+          emptyDir: {}
+          {{ end }}
+          {{ end }}
+        - name: "{{ .Release.Name }}-assets"
+          {{ with .Values.storage.assets }}
+          {{ if .persist }}
+          persistentVolumeClaim:
+            claimName: "{{ $.Release.Name }}-assets"
+          {{ else }}
+          emptyDir: {}
+          {{ end }}
+          {{ end }}
+        - name: "{{ .Release.Name }}-library"
+          {{ with .Values.storage.library }}
+          {{ if and .persist (.hostPath) }}
+          hostPath:
+            path: {{ .hostPath }}
+          {{ else if and .persist (eq .hostPath "") }}
+          persistentVolumeClaim:
+            claimName: "{{ $.Release.Name }}-library"
+          {{ else }}
+          emptyDir: {}
+          {{ end }}
+          {{ end }}
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}

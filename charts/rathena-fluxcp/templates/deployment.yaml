@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-flux-cp"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-flux-cp"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-flux-cp"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-flux-cp"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+      annotations:
+        releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
+    spec:
+      containers:
+        - name: flux-cp
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.service.container.port }}
+          volumeMounts:
+            - name: "{{ .Release.Name }}-config"
+              mountPath: /var/www/html/config
+            - name: "{{ .Release.Name }}-data-tmp"
+              mountPath: /var/www/html/data/tmp
+      volumes:
+        - name: "{{ .Release.Name }}-config"
+          configMap:
+            name: "{{ .Release.Name }}-config"
+        - name: "{{ .Release.Name }}-data-tmp"
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-pvc"
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}

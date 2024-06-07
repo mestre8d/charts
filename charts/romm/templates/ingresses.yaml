@@ -1,0 +1,48 @@
+{{ if .Values.server.ingress.create }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ .Release.Name }}"
+  {{- with .Values.server.ingress.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-ingress"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.server.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+{{- if .Values.server.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.server.ingress.ingressClassName | quote }}
+{{- end }}
+  rules:
+  - http:
+      paths:
+{{- if empty (.Values.server.ingress.paths) }}
+      - backend:
+          service:
+            name: "{{ .Release.Name }}-svc"
+            port:
+              number: {{ .Values.server.service.port }}
+        pathType: ImplementationSpecific
+{{- if .Values.server.ingress.path }}
+        path: {{ .Values.server.ingress.path }}
+{{- end -}}
+{{- else }}
+{{ tpl (toYaml .Values.server.ingress.paths | indent 6) . }}
+{{- end -}}
+{{- if .Values.server.ingress.hostName }}
+    host: {{ tpl .Values.server.ingress.hostName . | quote }}
+{{- end }}
+{{- if .Values.server.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.server.ingress.tls ) . | indent 4 }}
+{{- end -}}
+{{- end -}}

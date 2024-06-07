@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-login-server-svc"
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -27,7 +27,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-char-server-svc"
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -52,7 +52,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-map-server-svc"
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -73,3 +73,57 @@ spec:
       protocol: TCP
       targetPort: 5121
   type: {{ .Values.servers.mapServer.service.type }}
+---
+{{ if .Values.servers.webServer.enable }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-web-server-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-web-server"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-web-server-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
+  ports:
+    - name: web-server
+      port: {{ .Values.servers.webServer.service.port }}
+      protocol: TCP
+      targetPort: 8888
+  type: {{ .Values.servers.loginServer.service.type }}
+{{ end }}
+---
+{{ if .Values.servers.proxyServer.enable }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-wsproxy-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-wsproxy-svc"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.servers.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
+  ports:
+    - name: wsproxy
+      port: {{ .Values.servers.proxyServer.service.port }}
+      protocol: TCP
+      targetPort: 5999
+  type: {{ .Values.servers.proxyServer.service.type }}
+{{ end }}

@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-login-server"
 spec:
   selector:
@@ -20,6 +20,11 @@ spec:
     spec:
       containers:
         - name: login-server
+          livenessProbe:
+            tcpSocket:
+              port: 6900
+            initialDelaySeconds: {{ .Values.servers.loginServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.loginServer.livenessProbe.periodSeconds }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           ports:
@@ -40,7 +45,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-char-server"
 spec:
   selector:
@@ -58,6 +63,11 @@ spec:
     spec:
       containers:
         - name: char-server
+          livenessProbe:
+            tcpSocket:
+              port: 6121
+            initialDelaySeconds: {{ .Values.servers.charServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.charServer.livenessProbe.periodSeconds }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           ports:
@@ -78,7 +88,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.servers.namespace }}
+  namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-map-server"
 spec:
   replicas: {{ .Values.servers.mapServer.replicas }}
@@ -97,6 +107,11 @@ spec:
     spec:
       containers:
         - name: map-server
+          livenessProbe:
+            tcpSocket:
+              port: 5121
+            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           ports:
@@ -113,3 +128,86 @@ spec:
     {{- if .Values.image.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
     {{- end }}
+---
+{{ if .Values.servers.webServer.enable }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-web-server"
+spec:
+  replicas: {{ .Values.servers.mapServer.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-web-server"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: web-server
+          livenessProbe:
+            httpGet:
+              port: 8888
+            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          ports:
+            - containerPort: 8888
+          command:
+            - /opt/rathena/web-server
+          volumeMounts:
+            - name: "{{ .Release.Name }}-conf-import"
+              mountPath: /opt/rathena/conf/import
+      volumes:
+        - name: "{{ .Release.Name }}-conf-import"
+          configMap:
+            name: "{{ .Release.Name }}-conf-import"
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+    {{- end }}
+{{ end }}
+---
+{{ if .Values.servers.proxyServer.enable }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-wsproxy"
+spec:
+  replicas: {{ .Values.servers.mapServer.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: "{{ .Release.Name }}-wsproxy"
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+        - name: wsproxy
+          livenessProbe:
+            tcpSocket:
+              port: 5999
+            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
+          image: "{{ .Values.servers.proxyServer.image.name }}:{{ .Values.servers.proxyServer.image.tag }}"
+          imagePullPolicy: {{ .Values.servers.proxyServer.image.imagePullPolicy }}
+          ports:
+            - containerPort: 5999
+    {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.servers.proxyServer.image.imagePullSecrets | nindent 8 }}
+    {{- end }}
+{{ end }}

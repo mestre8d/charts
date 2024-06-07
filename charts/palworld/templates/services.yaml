@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-svc"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.server.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.server.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-server"
+  ports:
+    {{ if .Values.api.attach_to_game_server }}
+    - name: api
+      port: {{ .Values.api.service.port }}
+      protocol: {{ .Values.api.service.protocol }}
+      targetPort: {{ .Values.api.config.port }}
+    {{ end }}
+    {{- with .Values.server.service.ports }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  type: {{ .Values.server.service.type }}
+---
+{{ if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: "{{ .Release.Name }}-api-svc"
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: "{{ .Release.Name }}-api-svc"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "{{ .Release.Name }}-api-svc"
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- with .Values.api.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.api.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ .Release.Name }}-api"
+  ports:
+    - name: api
+      port: {{ .Values.api.service.port }}
+      protocol: {{ .Values.api.service.protocol }}
+      targetPort: {{ .Values.api.config.port }}
+  type: {{ .Values.api.service.type }}
+{{ end }}
