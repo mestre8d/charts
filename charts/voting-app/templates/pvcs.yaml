@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ template "voting-app.fullname" . }}-database-pvc"
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database-pvc"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.database.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.database.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.database.storage.size }}
+  {{ with .Values.database.storage.storageClassName }}
+  storageClassName: {{ . }}
+  {{ end }}
+---

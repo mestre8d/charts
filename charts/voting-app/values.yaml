@@ -1,0 +1,105 @@
+namespaceOverride: ""
+fullnameOverride: ""
+nameOverride: ""
+clusterZone: "cluster.local"
+# -- Configure the image for all the services.
+images:
+  database:
+    name: postgres
+    tag: 14
+  redis:
+    name: redis
+    tag: 7.4
+  vote:
+    name: ghcr.io/filipe-souza/example-voting-app-docker
+    tag: vote-v0.0.1
+  result:
+    name: ghcr.io/filipe-souza/example-voting-app-docker
+    tag: result-v0.0.1
+  worker:
+    name: ghcr.io/filipe-souza/example-voting-app-docker
+    tag: worker-v0.0.1
+  imagePullPolicy: Always
+  imagePullSecrets: []
+replicaCount: 1
+vote:
+  labels: {}
+  annotations: {}
+  service:
+    port: 80
+    type: ClusterIP
+  ingress:
+    labels: {}
+    annotations: {}
+    # -- Enable/disables the creation of the Ingress
+    create: false
+    # -- The ingress class name
+    ingressClassName: ""
+    # -- Multiple paths configuration.
+    paths: [ ]
+    # -- Default path configuration
+    path: "/"
+    hostName: ""
+    resourceRootUrl: ""
+    # TLS secret configuration
+    tls: { }
+result:
+  labels: {}
+  annotations: {}
+  service:
+    port: 80
+    type: ClusterIP
+  ingress:
+    labels: {}
+    annotations: {}
+    # -- Enable/disables the creation of the Ingress
+    create: false
+    # -- The ingress class name
+    ingressClassName: ""
+    # -- Multiple paths configuration.
+    paths: [ ]
+    # -- Default path configuration
+    path: "/"
+    hostName: ""
+    resourceRootUrl: ""
+    # TLS secret configuration
+    tls: { }
+worker:
+  labels: {}
+  annotations: {}
+# -- PostgreSQL service configuration
+database:
+  labels: {}
+  annotations: {}
+  username: voting
+  password: "voting"
+  databaseName: "voting"
+  storage:
+    size: 2Gi
+    storageClassName: ""
+  service:
+    port: 5432
+    type: ClusterIP
+  ingress:
+    labels: {}
+    annotations: {}
+    # -- Enable/disables the creation of the Ingress
+    create: false
+    # -- The ingress class name
+    ingressClassName: ""
+    # -- Multiple paths configuration.
+    paths: [ ]
+    # -- Default path configuration
+    path: "/"
+    hostName: ""
+    resourceRootUrl: ""
+    # TLS secret configuration
+    tls: { }
+# -- Redis service configuration
+redis:
+  labels: {}
+  annotations: {}
+  service:
+    port: 6379
+    type: ClusterIP
+

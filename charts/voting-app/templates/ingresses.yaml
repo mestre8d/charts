@@ -1,0 +1,90 @@
+---
+{{ if .Values.vote.ingress.create }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "voting-app.fullname" . }}-vote-ingress
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote-ingress"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.vote.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.vote.ingress.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+{{- if .Values.vote.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.vote.ingress.ingressClassName | quote }}
+{{- end }}
+  rules:
+  - http:
+      paths:
+{{- if empty (.Values.vote.ingress.paths) }}
+      - backend:
+          service:
+            name: "{{ template "voting-app.fullname" . }}-vote-svc"
+            port:
+              number: {{ .Values.vote.service.port }}
+        pathType: ImplementationSpecific
+{{- if .Values.vote.ingress.path }}
+        path: {{ .Values.vote.ingress.path }}
+{{- end -}}
+{{- else }}
+{{ tpl (toYaml .Values.vote.ingress.paths | indent 6) . }}
+{{- end -}}
+{{- if .Values.vote.ingress.hostName }}
+    host: {{ tpl .Values.vote.ingress.hostName . | quote }}
+{{- end }}
+{{- if .Values.vote.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.vote.ingress.tls ) . | indent 4 }}
+{{- end -}}
+{{ end }}
+---
+{{ if .Values.result.ingress.create }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "voting-app.fullname" . }}-result-ingress
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result-ingress"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.result.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.result.ingress.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+{{- if .Values.result.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.result.ingress.ingressClassName | quote }}
+{{- end }}
+  rules:
+  - http:
+      paths:
+{{- if empty (.Values.result.ingress.paths) }}
+      - backend:
+          service:
+            name: "{{ template "voting-app.fullname" . }}-result-svc"
+            port:
+              number: {{ .Values.result.service.port }}
+        pathType: ImplementationSpecific
+{{- if .Values.result.ingress.path }}
+        path: {{ .Values.result.ingress.path }}
+{{- end -}}
+{{- else }}
+{{ tpl (toYaml .Values.result.ingress.paths | indent 6) . }}
+{{- end -}}
+{{- if .Values.result.ingress.hostName }}
+    host: {{ tpl .Values.result.ingress.hostName . | quote }}
+{{- end }}
+{{- if .Values.result.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.result.ingress.tls ) . | indent 4 }}
+{{- end -}}
+{{ end }}
