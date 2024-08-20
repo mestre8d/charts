@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "voting-app.fullname" . }}-vote-svc"
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote-svc"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.vote.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.vote.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote"
+  ports:
+    - name: vote
+      port: {{ .Values.vote.service.port }}
+      protocol: TCP
+      targetPort: 80
+  type: {{ .Values.vote.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "voting-app.fullname" . }}-result-svc"
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result-svc"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.result.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.result.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result"
+  ports:
+    - name: result
+      port: {{ .Values.result.service.port }}
+      protocol: TCP
+      targetPort: 80
+  type: {{ .Values.result.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "voting-app.fullname" . }}-database-svc"
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database-svc"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.database.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.database.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database"
+  ports:
+    - name: result
+      port: {{ .Values.database.service.port }}
+      protocol: TCP
+      targetPort: 5432
+  type: {{ .Values.database.service.type }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "voting-app.fullname" . }}-redis-svc"
+  namespace: {{ template "voting-app.namespace" . }}
+  labels:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-redis-svc"
+    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- with .Values.redis.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.redis.annotations }}
+  annotations:
+  {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-redis"
+  ports:
+    - name: result
+      port: {{ .Values.redis.service.port }}
+      protocol: TCP
+      targetPort: 6379
+  type: {{ .Values.redis.service.type }}
+---
