@@ -4,7 +4,6 @@ version: 0.0.0
 description: This chart can provide a Voting app installation on a Kubernetes cluster.
 type: application
 keywords:
-  - mmo
   - example-voting-app
   - docker
   - docker-voting-app
