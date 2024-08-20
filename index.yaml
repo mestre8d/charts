@@ -267,4 +267,29 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/romm-helm-0.0.1/romm-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2024-06-04T18:51:33.509677423Z"
+  voting-app:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2024-08-20T01:40:03.344850916Z"
+    description: This chart can provide a Voting app installation on a Kubernetes
+      cluster.
+    digest: f48d7aa46455122d8a9c2feaae0d19f10e9c40145ec016cd243892ebf992e555
+    home: https://github.com/mestre8d/charts
+    icon: https://avatars.githubusercontent.com/u/25759379?s=128&v=4
+    keywords:
+    - example-voting-app
+    - docker
+    - docker-voting-app
+    maintainers:
+    - email: filipe.souza@mestre8d.com
+      name: Filipe Souza
+      url: https://github.com/Filipe-Souza
+    name: voting-app
+    sources:
+    - https://github.com/mestre8d/charts/tree/main/charts/voting-app
+    - https://github.com/Filipe-Souza/example-voting-app-docker
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/voting-app-0.0.0/voting-app-0.0.0.tgz
+    version: 0.0.0
+generated: "2024-08-20T01:40:03.344875772Z"
