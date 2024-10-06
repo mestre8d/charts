@@ -34,6 +34,10 @@ spec:
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
+          resources:
+          {{- if .Values.servers.loginServer.resources }}
+          {{- toYaml .Values.servers.loginServer.resources | nindent 12 }}
+          {{- end }}
       volumes:
         - name: "{{ .Release.Name }}-conf-import"
           configMap:
@@ -77,6 +81,10 @@ spec:
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
+          resources:
+          {{- if .Values.servers.charServer.resources }}
+          {{- toYaml .Values.servers.charServer.resources | nindent 12 }}
+          {{- end }}
       volumes:
         - name: "{{ .Release.Name }}-conf-import"
           configMap:
@@ -121,6 +129,10 @@ spec:
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
+          resources:
+          {{- if .Values.servers.mapServer.resources }}
+          {{- toYaml .Values.servers.mapServer.resources | nindent 12 }}
+          {{- end }}
       volumes:
         - name: "{{ .Release.Name }}-conf-import"
           configMap:
@@ -166,6 +178,10 @@ spec:
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
+          resources:
+          {{- if .Values.servers.webServer.resources }}
+          {{- toYaml .Values.servers.webServer.resources | nindent 12 }}
+          {{- end }}
       volumes:
         - name: "{{ .Release.Name }}-conf-import"
           configMap:
@@ -207,6 +223,10 @@ spec:
           imagePullPolicy: {{ .Values.servers.proxyServer.image.imagePullPolicy }}
           ports:
             - containerPort: 5999
+          resources:
+          {{- if .Values.servers.proxyServer.resources }}
+          {{- toYaml .Values.servers.proxyServer.resources | nindent 12 }}
+          {{- end }}
     {{- if .Values.image.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.servers.proxyServer.image.imagePullSecrets | nindent 8 }}
     {{- end }}
