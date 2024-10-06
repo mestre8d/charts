@@ -37,6 +37,13 @@ servers:
   charServer:
     # -- Number of replicas of this pod
     replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2048Mi"
+      requests:
+        cpu: "0.5"
+        memory: "512Mi"
     livenessProbe:
       # -- Delay to start probing the pod
       initialDelaySeconds: 30
@@ -54,6 +61,13 @@ servers:
     md5Password: no
     # -- Number of replicas of this pod
     replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2048Mi"
+      requests:
+        cpu: "0.5"
+        memory: "512Mi"
     livenessProbe:
       # -- Delay to start probing the pod
       initialDelaySeconds: 15
@@ -69,6 +83,13 @@ servers:
   mapServer:
     # -- Number of replicas of this pod
     replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2048Mi"
+      requests:
+        cpu: "0.5"
+        memory: "512Mi"
     livenessProbe:
       # -- Delay to start probing the pod
       initialDelaySeconds: 30
@@ -90,6 +111,13 @@ servers:
       imagePullPolicy: Always
     # -- Number of replicas of this pod
     replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2048Mi"
+      requests:
+        cpu: "0.5"
+        memory: "512Mi"
     livenessProbe:
       # -- Delay to start probing the pod
       initialDelaySeconds: 30
@@ -111,6 +139,13 @@ servers:
     enable: false
     # -- Number of replicas of this pod
     replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2048Mi"
+      requests:
+        cpu: "0.5"
+        memory: "512Mi"
     livenessProbe:
       # -- Delay to start probing the pod
       initialDelaySeconds: 30
