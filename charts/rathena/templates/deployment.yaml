@@ -124,8 +124,8 @@ spec:
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           ports:
             - containerPort: 5121
-          command:
-            - /opt/rathena/map-server
+          command: ["/usr/bin/gdb"]
+          args: ["-ex=r", "/opt/rathena/map-server"]
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
