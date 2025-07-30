@@ -124,8 +124,8 @@ spec:
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           ports:
             - containerPort: 5121
-          command: ["/usr/bin/gdb"]
-          args: ["-ex=r", "/opt/rathena/map-server"]
+          command:
+            - /opt/rathena/map-server
           volumeMounts:
             - name: "{{ .Release.Name }}-conf-import"
               mountPath: /opt/rathena/conf/import
@@ -134,6 +134,8 @@ spec:
           {{- toYaml .Values.servers.mapServer.resources | nindent 12 }}
           {{- end }}
       volumes:
+        - name: test
+          emptyDir: {}
         - name: "{{ .Release.Name }}-conf-import"
           configMap:
             name: "{{ .Release.Name }}-conf-import"
