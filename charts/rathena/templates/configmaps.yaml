@@ -61,7 +61,7 @@ data:
     log_db_db: {{ .Values.databases.log.name }}
     log_codepage:
     log_login_db: loginlog
-    use_sql_db: yes
+    use_sql_db: no
     sql_logs: 1
   inter_server.yml: ''
   log_conf.txt: ''
