@@ -4,6 +4,10 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-login-server-svc"
+  annotations:
+    {{- with .Values.servers.loginServer.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/name: "{{ .Release.Name }}-login-server"
@@ -11,7 +15,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "{{ .Release.Name }}-login-server-svc"
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- with .Values.servers.labels }}
+    {{- with .Values.servers.loginServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -29,6 +33,10 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-char-server-svc"
+  annotations:
+    {{- with .Values.servers.charServer.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/name: "{{ .Release.Name }}-char-server"
@@ -36,7 +44,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "{{ .Release.Name }}-char-server-svc"
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- with .Values.servers.labels }}
+    {{- with .Values.servers.charServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -54,6 +62,10 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-map-server-svc"
+  annotations:
+    {{- with .Values.servers.mapServer.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/name: "{{ .Release.Name }}-map-server"
@@ -61,7 +73,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "{{ .Release.Name }}-map-server-svc"
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- with .Values.servers.labels }}
+    {{- with .Values.servers.mapServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -80,6 +92,10 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-web-server-svc"
+  annotations:
+    {{- with .Values.servers.webServer.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/name: "{{ .Release.Name }}-web-server"
@@ -87,7 +103,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "{{ .Release.Name }}-web-server-svc"
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- with .Values.servers.labels }}
+    {{- with .Values.servers.webServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -107,6 +123,10 @@ kind: Service
 metadata:
   namespace: {{ .Values.namespace }}
   name: "{{ .Release.Name }}-wsproxy-svc"
+  annotations:
+    {{- with .Values.servers.proxyServer.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   labels:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/name: "{{ .Release.Name }}-wsproxy-svc"
@@ -114,7 +134,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy-svc"
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- with .Values.servers.labels }}
+    {{- with .Values.servers.proxyServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:

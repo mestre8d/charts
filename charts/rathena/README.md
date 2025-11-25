@@ -1,6 +1,6 @@
 # rathena-helm
 
-![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.0.300](https://img.shields.io/badge/Version-0.0.300-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 
@@ -38,6 +38,7 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | namespace | string | `"rathena"` |  |
 | replicaCount | int | `1` |  |
 | servers.annotations | object | `{}` |  |
+| servers.charServer.annotations | object | `{}` | Annotations for the Char Server components |
 | servers.charServer.livenessProbe.initialDelaySeconds | int | `30` | Delay to start probing the pod |
 | servers.charServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
 | servers.charServer.replicas | int | `1` | Number of replicas of this pod |
@@ -45,12 +46,15 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | servers.charServer.resources.limits.memory | string | `"2048Mi"` |  |
 | servers.charServer.resources.requests.cpu | string | `"0.5"` |  |
 | servers.charServer.resources.requests.memory | string | `"512Mi"` |  |
+| servers.charServer.service.annotations | object | `{}` |  |
 | servers.charServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.charServer.service.labels | object | `{}` |  |
 | servers.charServer.service.port | int | `6121` | Port that service will be listening |
 | servers.charServer.service.type | string | `"ClusterIP"` | Type of service. |
 | servers.globalName | string | `"rAthena"` | Sets the server_name into the char_conf.txt |
 | servers.interServer | object | `{"auth":{"passwd":"p1","userid":"s1"}}` | Configures the credentials to be stored into the config files for the inter-server authentication. |
 | servers.labels | object | `{}` |  |
+| servers.loginServer.annotations | object | `{}` | Annotations for the Login Server components |
 | servers.loginServer.livenessProbe.initialDelaySeconds | int | `15` | Delay to start probing the pod |
 | servers.loginServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
 | servers.loginServer.md5Password | string | `"no"` | Set this value to yes if going to use MySQL 8.0 |
@@ -59,9 +63,12 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | servers.loginServer.resources.limits.memory | string | `"2048Mi"` |  |
 | servers.loginServer.resources.requests.cpu | string | `"0.5"` |  |
 | servers.loginServer.resources.requests.memory | string | `"512Mi"` |  |
+| servers.loginServer.service.annotations | object | `{}` |  |
 | servers.loginServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.loginServer.service.labels | object | `{}` |  |
 | servers.loginServer.service.port | int | `6900` | Port that service will be listening |
 | servers.loginServer.service.type | string | `"ClusterIP"` | Type of service. |
+| servers.mapServer.annotations | object | `{}` | Annotations for the Map Server components |
 | servers.mapServer.livenessProbe.initialDelaySeconds | int | `30` | Delay to start probing the pod |
 | servers.mapServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
 | servers.mapServer.replicas | int | `1` | Number of replicas of this pod |
@@ -69,9 +76,12 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | servers.mapServer.resources.limits.memory | string | `"2048Mi"` |  |
 | servers.mapServer.resources.requests.cpu | string | `"0.5"` |  |
 | servers.mapServer.resources.requests.memory | string | `"512Mi"` |  |
+| servers.mapServer.service.annotations | object | `{}` |  |
 | servers.mapServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.mapServer.service.labels | object | `{}` |  |
 | servers.mapServer.service.port | int | `5121` | Port that service will be listening |
 | servers.mapServer.service.type | string | `"ClusterIP"` | Type of service. |
+| servers.proxyServer.annotations | object | `{}` | Annotations for the wsProxy Server components |
 | servers.proxyServer.enable | bool | `true` | Enables the websocket proxy service, allowing the usage of roBrowser clients. |
 | servers.proxyServer.image.imagePullPolicy | string | `"Always"` |  |
 | servers.proxyServer.image.name | string | `"ghcr.io/filipe-souza/rathena"` |  |
@@ -83,9 +93,12 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | servers.proxyServer.resources.limits.memory | string | `"2048Mi"` |  |
 | servers.proxyServer.resources.requests.cpu | string | `"0.5"` |  |
 | servers.proxyServer.resources.requests.memory | string | `"512Mi"` |  |
+| servers.proxyServer.service.annotations | object | `{}` |  |
 | servers.proxyServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.proxyServer.service.labels | object | `{}` |  |
 | servers.proxyServer.service.port | int | `5999` | Port that service will be listening |
 | servers.proxyServer.service.type | string | `"ClusterIP"` | Type of service. |
+| servers.webServer.annotations | object | `{}` | Annotations for the web Server components |
 | servers.webServer.enable | bool | `false` |  |
 | servers.webServer.livenessProbe.initialDelaySeconds | int | `30` | Delay to start probing the pod |
 | servers.webServer.livenessProbe.periodSeconds | int | `60` | Delay between probes on the pod |
@@ -94,7 +107,9 @@ This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 | servers.webServer.resources.limits.memory | string | `"2048Mi"` |  |
 | servers.webServer.resources.requests.cpu | string | `"0.5"` |  |
 | servers.webServer.resources.requests.memory | string | `"512Mi"` |  |
+| servers.webServer.service.annotations | object | `{}` |  |
 | servers.webServer.service.create | bool | `true` | Enable/disables the creation of the service |
+| servers.webServer.service.labels | object | `{}` |  |
 | servers.webServer.service.port | int | `8888` | Port that service will be listening |
 | servers.webServer.service.type | string | `"ClusterIP"` | Type of service. |
 
