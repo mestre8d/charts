@@ -35,6 +35,8 @@ servers:
   # -- Sets the server_name into the char_conf.txt
   globalName: rAthena
   charServer:
+    # -- Annotations for the Char Server components
+    annotations: {}
     # -- Number of replicas of this pod
     replicas: 1
     resources:
@@ -50,6 +52,8 @@ servers:
       # -- Delay between probes on the pod
       periodSeconds: 60
     service:
+      annotations: {}
+      labels: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
@@ -57,6 +61,8 @@ servers:
       # -- Type of service.
       type: ClusterIP
   loginServer:
+    # -- Annotations for the Login Server components
+    annotations: {}
     # -- Set this value to yes if going to use MySQL 8.0
     md5Password: no
     # -- Number of replicas of this pod
@@ -74,6 +80,8 @@ servers:
       # -- Delay between probes on the pod
       periodSeconds: 60
     service:
+      labels: {}
+      annotations: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
@@ -81,6 +89,8 @@ servers:
       # -- Type of service.
       type: ClusterIP
   mapServer:
+    # -- Annotations for the Map Server components
+    annotations: {}
     # -- Number of replicas of this pod
     replicas: 1
     resources:
@@ -96,6 +106,8 @@ servers:
       # -- Delay between probes on the pod
       periodSeconds: 60
     service:
+      annotations: {}
+      labels: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
@@ -103,6 +115,8 @@ servers:
       # -- Type of service.
       type: ClusterIP
   proxyServer:
+    # -- Annotations for the wsProxy Server components
+    annotations: {}
     # -- Enables the websocket proxy service, allowing the usage of roBrowser clients.
     enable: true
     image:
@@ -124,6 +138,8 @@ servers:
       # -- Delay between probes on the pod
       periodSeconds: 60
     service:
+      annotations: {}
+      labels: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
@@ -136,6 +152,8 @@ servers:
       passwd: p1
       userid: s1
   webServer:
+    # -- Annotations for the web Server components
+    annotations: {}
     enable: false
     # -- Number of replicas of this pod
     replicas: 1
@@ -152,6 +170,8 @@ servers:
       # -- Delay between probes on the pod
       periodSeconds: 60
     service:
+      annotations: {}
+      labels: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
