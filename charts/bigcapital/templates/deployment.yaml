@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bigcapital.fullname" . }}
+  labels:
+    {{- include "bigcapital.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bigcapital.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bigcapital.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- $pullSecrets := concat (.Values.webapp.image.imagePullSecrets | default (list)) (.Values.server.image.imagePullSecrets | default (list)) (.Values.gotenberg.image.imagePullSecrets | default (list)) (.Values.database.image.imagePullSecrets | default (list)) (.Values.redis.image.imagePullSecrets | default (list)) | uniq }}
+      {{- if $pullSecrets }}
+      imagePullSecrets:
+        {{- range $pullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      containers:
+        - name: webapp
+          image: "{{ .Values.webapp.image.registry }}/{{ .Values.webapp.image.image }}:{{ .Values.webapp.image.tag }}"
+          imagePullPolicy: {{ .Values.webapp.image.pullPolicy }}
+          ports:
+            - name: http-webapp
+              containerPort: {{ .Values.webapp.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.webapp.resources | nindent 12 }}
+
+        - name: server
+          image: "{{ .Values.server.image.registry }}/{{ .Values.server.image.image }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: app-env
+          ports:
+            - name: http-server
+              containerPort: {{ .Values.server.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+
+        - name: gotenberg
+          image: "{{ .Values.gotenberg.image.registry }}/{{ .Values.gotenberg.image.image }}:{{ .Values.gotenberg.image.tag }}"
+          imagePullPolicy: {{ .Values.gotenberg.image.pullPolicy }}
+          ports:
+            - name: http-gotenberg
+              containerPort: {{ .Values.gotenberg.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.gotenberg.resources | nindent 12 }}
+          volumeMounts:
+            - name: gotenberg-storage
+              mountPath: /data
+
+        - name: database
+          image: "{{ .Values.database.image.registry }}/{{ .Values.database.image.image }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          ports:
+            - name: tcp-database
+              containerPort: {{ .Values.database.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          volumeMounts:
+            - name: database-storage
+              mountPath: /var/lib/mysql
+
+        {{- if .Values.redis.enabled }}
+        - name: redis
+          image: "{{ .Values.redis.image.registry }}/{{ .Values.redis.image.image }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          ports:
+            - name: tcp-redis
+              containerPort: {{ .Values.redis.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+        {{- end }}
+
+      volumes:
+        - name: gotenberg-storage
+          persistentVolumeClaim:
+            claimName: {{ include "bigcapital.fullname" . }}-gotenberg
+
+        - name: database-storage
+          persistentVolumeClaim:
+            claimName: {{ include "bigcapital.fullname" . }}-database
+
+        {{- if .Values.redis.enabled }}
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: {{ include "bigcapital.fullname" . }}-redis
+        {{- end }}

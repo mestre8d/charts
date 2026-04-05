@@ -1,0 +1,91 @@
+{{- if and .Values.database.enabled .Values.database.storage }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "bigcapital.fullname" . }}-database-pv
+  labels:
+    {{- include "bigcapital.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    {{- with .Values.database.storage.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.database.storage.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.database.storage.size }}
+  accessModes:
+    - {{ .Values.database.storage.accessMode }}
+  persistentVolumeReclaimPolicy: Retain
+  {{- if .Values.database.storage.storageClass }}
+  storageClassName: {{ .Values.database.storage.storageClass | quote }}
+  {{- else }}
+  storageClassName: manual
+  {{- end }}
+  hostPath:
+    path: /mnt/data/{{ include "bigcapital.fullname" . }}/database
+---
+{{- end }}
+
+{{- if and .Values.redis.enabled .Values.redis.storage }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "bigcapital.fullname" . }}-redis-pv
+  labels:
+    {{- include "bigcapital.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+    {{- with .Values.redis.storage.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.redis.storage.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.redis.storage.size }}
+  accessModes:
+    - {{ .Values.redis.storage.accessMode }}
+  persistentVolumeReclaimPolicy: Retain
+  {{- if .Values.redis.storage.storageClass }}
+  storageClassName: {{ .Values.redis.storage.storageClass | quote }}
+  {{- else }}
+  storageClassName: manual
+  {{- end }}
+  hostPath:
+    path: /mnt/data/{{ include "bigcapital.fullname" . }}/redis
+---
+{{- end }}
+
+{{- if .Values.gotenberg.storage }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "bigcapital.fullname" . }}-gotenberg-pv
+  labels:
+    {{- include "bigcapital.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gotenberg
+    {{- with .Values.gotenberg.storage.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.gotenberg.storage.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.gotenberg.storage.size }}
+  accessModes:
+    - {{ .Values.gotenberg.storage.accessMode }}
+  persistentVolumeReclaimPolicy: Retain
+  {{- if .Values.gotenberg.storage.storageClass }}
+  storageClassName: {{ .Values.gotenberg.storage.storageClass | quote }}
+  {{- else }}
+  storageClassName: manual
+  {{- end }}
+  hostPath:
+    path: /mnt/data/{{ include "bigcapital.fullname" . }}/gotenberg
+{{- end }}
