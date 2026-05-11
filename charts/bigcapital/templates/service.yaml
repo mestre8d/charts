@@ -1,0 +1,145 @@
+{{- /*
+All workloads in this chart run as containers inside a single Pod
+(see deployment.yaml), so every Service below targets the same Pod
+via the chart's selectorLabels and differentiates the backend by
+targetPort.
+*/ -}}
+
+{{- $fullName := include "bigcapital.fullname" . -}}
+{{- $selectorLabels := include "bigcapital.selectorLabels" . -}}
+{{- $commonLabels := include "bigcapital.labels" . -}}
+
+{{- if .Values.webapp.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}-webapp
+  labels:
+    {{- $commonLabels | nindent 4 }}
+    app.kubernetes.io/component: webapp
+    {{- with .Values.webapp.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.webapp.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.webapp.service.type }}
+  selector:
+    {{- $selectorLabels | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.webapp.service.port }}
+      targetPort: http-webapp
+      protocol: TCP
+{{- end }}
+
+{{- if .Values.server.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}-server
+  labels:
+    {{- $commonLabels | nindent 4 }}
+    app.kubernetes.io/component: server
+    {{- with .Values.server.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.server.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.server.service.type }}
+  selector:
+    {{- $selectorLabels | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.server.service.port }}
+      targetPort: http-server
+      protocol: TCP
+{{- end }}
+
+{{- if .Values.gotenberg.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}-gotenberg
+  labels:
+    {{- $commonLabels | nindent 4 }}
+    app.kubernetes.io/component: gotenberg
+    {{- with .Values.gotenberg.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gotenberg.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.gotenberg.service.type }}
+  selector:
+    {{- $selectorLabels | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.gotenberg.service.port }}
+      targetPort: http-gotenberg
+      protocol: TCP
+{{- end }}
+
+{{- if and .Values.database.enabled (not .Values.database.external.enabled) .Values.database.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}-database
+  labels:
+    {{- $commonLabels | nindent 4 }}
+    app.kubernetes.io/component: database
+    {{- with .Values.database.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.database.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.database.service.type }}
+  selector:
+    {{- $selectorLabels | nindent 4 }}
+  ports:
+    - name: mysql
+      port: {{ .Values.database.service.port }}
+      targetPort: tcp-database
+      protocol: TCP
+{{- end }}
+
+{{- if and .Values.redis.enabled .Values.redis.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}-redis
+  labels:
+    {{- $commonLabels | nindent 4 }}
+    app.kubernetes.io/component: redis
+    {{- with .Values.redis.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.redis.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.redis.service.type }}
+  selector:
+    {{- $selectorLabels | nindent 4 }}
+  ports:
+    - name: redis
+      port: {{ .Values.redis.service.port }}
+      targetPort: tcp-redis
+      protocol: TCP
+{{- end }}
