@@ -1,5 +1,16 @@
 apiVersion: v1
 entries:
+  bigcapital:
+  - apiVersion: v2
+    appVersion: v0.25.20
+    created: "2026-05-11T02:59:39.602210718Z"
+    description: A Helm chart for the Big Capital project.
+    digest: fda7416280955aa8988c647697865d0d1df564508ce8835b1d25a14a102b48e5
+    name: bigcapital
+    type: application
+    urls:
+    - https://github.com/mestre8d/charts/releases/download/bigcapital-0.1.0/bigcapital-0.1.0.tgz
+    version: 0.1.0
   fluxcp-helm:
   - apiVersion: v2
     appVersion: latest
@@ -392,4 +403,4 @@ entries:
     urls:
     - https://github.com/mestre8d/charts/releases/download/voting-app-0.0.0/voting-app-0.0.0.tgz
     version: 0.0.0
-generated: "2025-11-25T20:53:43.695369427Z"
+generated: "2026-05-11T02:59:39.602247988Z"
