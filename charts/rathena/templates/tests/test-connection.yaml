@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "rathena.fullname" . }}-test-connection"
+  labels:
+    {{- include "rathena.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  {{- with .Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  containers:
+    - name: tcp-probe
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          set -eu
+          host="{{ include "rathena.fullname" . }}-login-server-svc"
+          port="{{ .Values.servers.loginServer.service.port }}"
+          echo "Probing $host:$port ..."
+          for i in $(seq 1 30); do
+            if nc -z -w 2 "$host" "$port"; then
+              echo "OK: connected to $host:$port"
+              exit 0
+            fi
+            echo "attempt $i: not ready yet"
+            sleep 2
+          done
+          echo "FAIL: could not connect to $host:$port after 30 attempts"
+          exit 1

@@ -1,8 +1,9 @@
 apiVersion: v2
-name: rathena-helm
-version: 0.0.300
+name: rathena
+version: 0.3.0
 description: This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 type: application
+kubeVersion: ">=1.23.0-0"
 keywords:
   - mmo
   - rathena
@@ -16,6 +17,11 @@ maintainers:
   - name: Filipe Souza
     email: filipe.souza@mestre8d.com
     url: https://github.com/Filipe-Souza
-icon: https://github.com/rathena/rathena/blob/master/doc/logo.png
-appVersion: "latest"
-deprecated: false
+icon: https://raw.githubusercontent.com/rathena/rathena/master/doc/logo.png
+appVersion: "1.0.0"
+annotations:
+  artifacthub.io/license: GPL-3.0
+  artifacthub.io/category: gaming
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Major chart hygiene refactor (labels, security, persistence)

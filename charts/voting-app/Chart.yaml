@@ -1,8 +1,9 @@
 apiVersion: v2
 name: voting-app
-version: 0.0.0
+version: 0.1.0
 description: This chart can provide a Voting app installation on a Kubernetes cluster.
 type: application
+kubeVersion: ">=1.23.0-0"
 keywords:
   - example-voting-app
   - docker
@@ -16,5 +17,10 @@ maintainers:
     email: filipe.souza@mestre8d.com
     url: https://github.com/Filipe-Souza
 icon: https://avatars.githubusercontent.com/u/25759379?s=128&v=4
-appVersion: "latest"
-deprecated: false
+appVersion: "0.0.1"
+annotations:
+  artifacthub.io/license: GPL-3.0
+  artifacthub.io/category: integration-and-delivery
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Major chart hygiene refactor (labels, security, persistence)

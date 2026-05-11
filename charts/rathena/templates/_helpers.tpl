@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "bigcapital.name" -}}
+{{- define "rathena.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "bigcapital.fullname" -}}
+{{- define "rathena.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,19 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "bigcapital.chart" -}}
+{{- define "rathena.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Common labels. Note: these intentionally do NOT include
-`app.kubernetes.io/component`; callers add the per-resource component
-label themselves so the same helper can be reused across roles
-(webapp / server / gotenberg / database / redis).
+Common labels
 */}}
-{{- define "bigcapital.labels" -}}
-helm.sh/chart: {{ include "bigcapital.chart" . }}
-{{ include "bigcapital.selectorLabels" . }}
+{{- define "rathena.labels" -}}
+helm.sh/chart: {{ include "rathena.chart" . }}
+{{ include "rathena.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -46,26 +43,37 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels.
-
-These are emitted into BOTH `spec.selector.matchLabels` (immutable
-on Deployments) AND `spec.template.metadata.labels`, so they MUST
-be a stable, minimal set. Only `app.kubernetes.io/name` and
-`app.kubernetes.io/instance` are included; the chart version,
-helm release service, and `app.kubernetes.io/component` are
-deliberately omitted to keep upgrades safe.
+Selector labels
 */}}
-{{- define "bigcapital.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "bigcapital.name" . }}
+{{- define "rathena.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "rathena.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use.
+Component labels (combine common labels with app.kubernetes.io/component).
+Usage: {{ include "rathena.componentLabels" (dict "context" . "component" "login-server") }}
 */}}
-{{- define "bigcapital.serviceAccountName" -}}
+{{- define "rathena.componentLabels" -}}
+{{ include "rathena.labels" .context }}
+app.kubernetes.io/component: {{ .component }}
+{{- end }}
+
+{{/*
+Component selector labels.
+Usage: {{ include "rathena.componentSelectorLabels" (dict "context" . "component" "login-server") }}
+*/}}
+{{- define "rathena.componentSelectorLabels" -}}
+{{ include "rathena.selectorLabels" .context }}
+app.kubernetes.io/component: {{ .component }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "rathena.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "bigcapital.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "rathena.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

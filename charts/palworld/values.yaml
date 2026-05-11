@@ -1,12 +1,72 @@
-# -- Namespace where the resources will be created
-namespace: palworld
+# Default values for palworld.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Number of server replicas. Multi-replica is NOT supported by Palworld
+# (single save file, RWO PVC). Keep this at 1.
+replicaCount: 1
+
+# -- Override the chart name (used in `app.kubernetes.io/name`).
+nameOverride: ""
+# -- Override the fully qualified name (default: `<release>-<chart>`).
+fullnameOverride: ""
+
+# -- Image pull secrets for private registries (applied to both server and api pods).
+imagePullSecrets: []
+
+serviceAccount:
+  # -- Whether to create a ServiceAccount.
+  create: true
+  # -- Whether the ServiceAccount token should be auto-mounted into pods.
+  automount: false
+  # -- Annotations to add to the ServiceAccount.
+  annotations: {}
+  # -- The name of the ServiceAccount to use. If not set and create is true, a name is generated.
+  name: ""
+
+# -- Annotations added to every pod template (server and api).
+podAnnotations: {}
+# -- Labels added to every pod template (server and api).
+podLabels: {}
+
+# -- Pod-level securityContext applied to both server and api pods.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level securityContext applied to both server and api containers.
+# `readOnlyRootFilesystem` is false because the upstream Palworld image writes
+# to its own filesystem (SteamCMD, server data, etc.).
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Node selector applied to both server and api pods.
+nodeSelector: {}
+# -- Tolerations applied to both server and api pods.
+tolerations: []
+# -- Affinity rules applied to both server and api pods.
+affinity: {}
+# -- PriorityClassName applied to both server and api pods.
+priorityClassName: ""
+
 # -- (dict) The server configuration
 # @notationType -- bigValue
 server:
-  # -- Additional annotations to the resources
-  annotations: { }
-  # -- Additional labels to the resources
-  labels: { }
+  # -- Additional annotations applied to the server Deployment pod template.
+  annotations: {}
+  # -- Additional labels applied to the server Deployment pod template.
+  labels: {}
+  # -- Termination grace period for the server pod. The Palworld game server
+  # needs time to flush state on shutdown.
+  terminationGracePeriodSeconds: 300
   # -- (dict) Resources limits for the container.
   resources:
     limits:
@@ -25,7 +85,7 @@ server:
     preventDelete: false
     # -- The size of the pvc storage.
     size: 12Gi
-    # -- The storage class name.
+    # -- The storage class name. If empty, the default StorageClass is used (preserving dynamic provisioning).
     storageClassName: ""
   # -- (dict) Define the parameters for the server image container
   # @notationType -- bigValue
@@ -51,13 +111,43 @@ server:
     - name: query
       containerPort: 27015
       protocol: UDP
-    # -- (dict) The "rcon" port definition .
+    # -- (dict) The "rcon" port definition. Palworld RCON is TCP.
     # If you change this, make sure to change the service.ports.rcon and server.config accordingly.
     - name: rcon
       containerPort: 25575
-      protocol: UDP
-  # -- (string) Change the deployment strategy
+      protocol: TCP
+  # -- (string) Deployment strategy for the server. Use Recreate because the
+  # game server is a single instance backed by an RWO PVC.
   strategy: Recreate
+
+  # -- (dict) Probes for the server container. The startupProbe gives SteamCMD
+  # plenty of time to download the game on first boot (`update_on_boot`).
+  # Liveness/readiness use a TCP check on the RCON port.
+  startupProbe:
+    tcpSocket:
+      port: rcon
+    failureThreshold: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+  livenessProbe:
+    tcpSocket:
+      port: rcon
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    tcpSocket:
+      port: rcon
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  # -- (dict) Override the pod-level securityContext for the server pod.
+  podSecurityContext: {}
+  # -- (dict) Override the container-level securityContext for the server container.
+  securityContext: {}
 
   # -- (dict) Change the service configuration.
   # If you change those, make sure to change the server.config and server.ports accordingly.
@@ -66,9 +156,9 @@ server:
     # -- (bool) Enables the creation of the service component.
     enabled: true
     # -- Additional annotations to the resources
-    annotations: { }
+    annotations: {}
     # -- Additional labels to the resources
-    labels: { }
+    labels: {}
     # -- (string) The type of service to be created.
     type: LoadBalancer
     # -- (dict) Change the ports to be mapped to the service.
@@ -76,22 +166,19 @@ server:
     # @notationType -- bigValue
     ports:
       # -- (dict) The "game" port definition.
-      # If you change this, make sure to change the server.ports.game and server.config.port accordingly.
       - name: game
         port: 8211
         protocol: UDP
         targetPort: 8211
       # -- (dict) The "query" port definition .
-      # If you change this, make sure to change the server.ports.query and server.config.query_port accordingly.
       - name: query
         port: 27015
         protocol: UDP
         targetPort: 27015
-      # -- (dict) The "rcon" port definition .
-      # If you change this, make sure to change the server.ports.rcon and server.config.rcon.port accordingly.
+      # -- (dict) The "rcon" port definition. Palworld RCON is TCP.
       - name: rcon
         port: 25575
-        protocol: UDP
+        protocol: TCP
         targetPort: 25575
   # -- (dict) Change the game server configuration.
   # If you change those, make sure to change the service.ports and server.ports accordingly.
@@ -99,9 +186,9 @@ server:
   # @notationType -- bigValue
   config:
     # -- Additional annotations to the resources
-    annotations: { }
+    annotations: {}
     # -- Additional labels to the resources
-    labels: { }
+    labels: {}
     puid: 1000
     pgid: 1000
     port: 8211
@@ -113,7 +200,6 @@ server:
     multithreading: true
     # -- (dict) Remote connection configuration.
     # Allows the remote connection and management for the server.
-    # Those are directly connected with the container image, providing multiple environment variables to the scripts.
     # @notationType -- bigValue
     rcon:
       # -- (bool) Enables/disables the rcon port.
@@ -121,31 +207,29 @@ server:
       # -- (string) The port for rcon. If you change this, make sure to change the service.ports and server.ports accordingly.
       port: 25575
       # -- (string) If not provided, a random password will be generated and stored on the secret.
+      # The password is preserved across upgrades via a `lookup` on the existing Secret.
       password: ""
     community:
       # -- (bool) Enables/disables the visibility of this server on Steam community servers list.
       enable: true
       # -- (string) If not provided, a random password will be generated and stored on the secret.
       password: ""
-      # -- (string) If not provided, a random server name will be generated with the "palworld_" prefix.
+    # -- (string) If not provided, a random server name will be generated with the "palworld_" prefix.
     server_name: ""
     # -- (string) The timezone used for time stamping backup server. Use the IANA TZ format with Area/Location
-    # See the [list of TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#Time_Zone_abbreviations)
     timezone: "UTC"
     # -- (string) You can manually specify the global IP address of the network on which the server running.
-    # If not specified, it will be detected automatically. If it does not work well, try manual configuration.
     public_ip: ""
     # -- (string) You can manually specify the port number of the network on which the server running.
-    # If not specified, it will be detected automatically. If it does not work well, try manual configuration.
     public_port: ""
     # -- (string) Your server description to be shown in game
     server_description: ""
     # -- (string) Update/Install the server when the container starts.
-    # THIS HAS TO BE ENABLED THE FIRST TIME YOU RUN THE CONTAINER
+    # THIS HAS TO BE ENABLED THE FIRST TIME YOU RUN THE CONTAINER.
+    # On first boot SteamCMD downloads the full game which can take many minutes;
+    # the startupProbe is configured with a high failureThreshold to allow this.
     update_on_boot: true
     # -- (object) Configures the game world settings.
-    # The key:values here should represent in game accepted values.
-    # Wrap all values with quotes here to avoid validation issues.
     # @notationType -- bigValue
     world_parameters:
       DAYTIME_SPEEDRATE: "1.000000"
@@ -200,39 +284,79 @@ server:
       REGION: ""
       USEAUTH: "True"
       BAN_LIST_URL: "https://api.palworldgame.com/api/banlist.txt"
+
 api:
-  # -- (bool) Enables the of the API components.
+  # -- (bool) Enables the standalone API Deployment.
+  # NOTE: If `attach_to_game_server: true`, set `enabled: false` to avoid running
+  # a duplicate API container. The chart will fail-fast if both are true.
   enabled: true
-  # -- (bool) Set this to true to create a container within the game server deployment with the same parameters.
-  # A new port will be added to the game server service if this is enabled.
+  # -- (bool) Set this to true to attach the API container as a sidecar inside
+  # the game server Deployment (sharing localhost with the RCON port).
+  # When true, you MUST set `api.enabled: false`.
   attach_to_game_server: false
-  # -- Additional annotations to the resources
-  annotations: { }
-  # -- Additional labels to the resources
-  labels: { }
-  # -- (dict) Define the parameters for the server image container
+  # -- Additional annotations applied to the api Deployment pod template.
+  annotations: {}
+  # -- Additional labels applied to the api Deployment pod template.
+  labels: {}
+  # -- (string) Deployment strategy for the api Deployment.
+  strategy: RollingUpdate
+  # -- (dict) Define the parameters for the API image container
   # @notationType -- bigValue
   image:
     # -- Name of the image, without the tag.
     name: valamidev/palworld-rcon-buddy
     # -- The tag of the image.
     tag: latest
-    # -- Define the pull policy for the server image.
+    # -- Pull policy for the api image.
     imagePullPolicy: IfNotPresent
+
+  # -- (dict) Probes for the API container (HTTP GET on `/`).
+  startupProbe:
+    httpGet:
+      path: /
+      port: api
+    failureThreshold: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+  livenessProbe:
+    httpGet:
+      path: /
+      port: api
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /
+      port: api
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  # -- (dict) Override the pod-level securityContext for the api pod.
+  podSecurityContext: {}
+  # -- (dict) Override the container-level securityContext for the api container.
+  securityContext: {}
+
+  # -- Resources for the api container.
+  resources: {}
+
   # -- (dict) Change the API server configuration.
-  # Those are directly connected with the container image, providing multiple environment variables to the scripts.
   # @notationType -- bigValue
   config:
-    # -- (string) The RCON server hostname.
+    # -- (string) The RCON server hostname. If empty, the in-cluster server Service is used.
     server_host: ""
     rcon_port: 25575
-    # -- (string) The RCON password.
+    # -- (string) The RCON password. If empty, the same password generated for
+    # the game server is reused (read from the shared Secret).
     rcon_password: ""
-    # -- (number) The RCON port.
+    # -- (number) The query port the API exposes for queries.
     query_port: 27015
     # -- (number) The TTL of the cached information for the /info endpoint, in milliseconds.
     info_cache_duration: 5000
-    # -- (string) The bearer token to be used in authenticated requests.
+    # -- (string) The bearer token to be used in authenticated requests. Stored in the shared Secret.
     bearer_token: ""
     # -- (number) The API container port. This port will be present on the service, deployment and configmap.
     port: 3000
@@ -240,9 +364,9 @@ api:
     # -- (bool) Enables the creation of the service component.
     enabled: true
     # -- Additional annotations to the resources
-    annotations: { }
+    annotations: {}
     # -- Additional labels to the resources
-    labels: { }
+    labels: {}
     # -- (string) The type of service to be created.
     type: ClusterIP
     # -- (number) Port number on the service.

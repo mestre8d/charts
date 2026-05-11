@@ -1,149 +1,126 @@
+{{- $fullName := include "rathena.fullname" . -}}
+{{- if .Values.servers.loginServer.service.create }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-login-server-svc"
-  annotations:
-    {{- with .Values.servers.loginServer.service.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+  name: {{ $fullName }}-login-server-svc
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-login-server"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-login-server-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "rathena.componentLabels" (dict "context" . "component" "login-server") | nindent 4 }}
     {{- with .Values.servers.loginServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.servers.loginServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.servers.loginServer.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
+    {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "login-server") | nindent 4 }}
   ports:
     - name: login-server
       port: {{ .Values.servers.loginServer.service.port }}
       protocol: TCP
-      targetPort: 6900
-  type: {{ .Values.servers.loginServer.service.type }}
+      targetPort: login-server
+{{- end }}
+{{- if .Values.servers.charServer.service.create }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-char-server-svc"
-  annotations:
-    {{- with .Values.servers.charServer.service.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+  name: {{ $fullName }}-char-server-svc
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-char-server"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-char-server-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "rathena.componentLabels" (dict "context" . "component" "char-server") | nindent 4 }}
     {{- with .Values.servers.charServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.servers.charServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.servers.charServer.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
+    {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "char-server") | nindent 4 }}
   ports:
     - name: char-server
       port: {{ .Values.servers.charServer.service.port }}
       protocol: TCP
-      targetPort: 6121
-  type: {{ .Values.servers.charServer.service.type }}
+      targetPort: char-server
+{{- end }}
+{{- if .Values.servers.mapServer.service.create }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-map-server-svc"
-  annotations:
-    {{- with .Values.servers.mapServer.service.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+  name: {{ $fullName }}-map-server-svc
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-map-server"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-map-server-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "rathena.componentLabels" (dict "context" . "component" "map-server") | nindent 4 }}
     {{- with .Values.servers.mapServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.servers.mapServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.servers.mapServer.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
+    {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "map-server") | nindent 4 }}
   ports:
     - name: map-server
       port: {{ .Values.servers.mapServer.service.port }}
       protocol: TCP
-      targetPort: 5121
-  type: {{ .Values.servers.mapServer.service.type }}
+      targetPort: map-server
+{{- end }}
+{{- if and .Values.servers.webServer.enable .Values.servers.webServer.service.create }}
 ---
-{{ if .Values.servers.webServer.enable }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-web-server-svc"
-  annotations:
-    {{- with .Values.servers.webServer.service.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+  name: {{ $fullName }}-web-server-svc
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-web-server"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-web-server-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "rathena.componentLabels" (dict "context" . "component" "web-server") | nindent 4 }}
     {{- with .Values.servers.webServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.servers.webServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.servers.webServer.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
+    {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "web-server") | nindent 4 }}
   ports:
     - name: web-server
       port: {{ .Values.servers.webServer.service.port }}
       protocol: TCP
-      targetPort: 8888
-  type: {{ .Values.servers.loginServer.service.type }}
-{{ end }}
+      targetPort: web-server
+{{- end }}
+{{- if and .Values.servers.proxyServer.enable .Values.servers.proxyServer.service.create }}
 ---
-{{ if .Values.servers.proxyServer.enable }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-wsproxy-svc"
-  annotations:
-    {{- with .Values.servers.proxyServer.service.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+  name: {{ $fullName }}-wsproxy-svc
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-wsproxy-svc"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "rathena.componentLabels" (dict "context" . "component" "wsproxy") | nindent 4 }}
     {{- with .Values.servers.proxyServer.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.servers.proxyServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: {{ .Values.servers.proxyServer.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
+    {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "wsproxy") | nindent 4 }}
   ports:
     - name: wsproxy
       port: {{ .Values.servers.proxyServer.service.port }}
       protocol: TCP
-      targetPort: 5999
-  type: {{ .Values.servers.proxyServer.service.type }}
-{{ end }}
+      targetPort: wsproxy
+{{- end }}

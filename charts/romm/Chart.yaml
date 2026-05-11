@@ -1,8 +1,9 @@
 apiVersion: v2
 name: romm-helm
-version: 0.0.3
+version: 0.1.0
 description: This chart can provide a rommapp/romm installation on a Kubernetes cluster.
 type: application
+kubeVersion: ">=1.23.0-0"
 keywords:
   - emulator
   - library
@@ -15,5 +16,10 @@ maintainers:
     email: filipe.souza@mestre8d.com
     url: https://github.com/Filipe-Souza
 icon: https://github.com/rommapp/romm/raw/release/.github/resources/romm_complete.svg
-appVersion: "latest"
-deprecated: false
+appVersion: "3.1.0"
+annotations:
+  artifacthub.io/license: GPL-3.0
+  artifacthub.io/category: gaming
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Major chart hygiene refactor (labels, security, persistence)

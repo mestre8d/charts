@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "bigcapital.name" -}}
+{{- define "fluxcp.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "bigcapital.fullname" -}}
+{{- define "fluxcp.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,46 +26,38 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "bigcapital.chart" -}}
+{{- define "fluxcp.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Common labels. Note: these intentionally do NOT include
-`app.kubernetes.io/component`; callers add the per-resource component
-label themselves so the same helper can be reused across roles
-(webapp / server / gotenberg / database / redis).
+Common labels
 */}}
-{{- define "bigcapital.labels" -}}
-helm.sh/chart: {{ include "bigcapital.chart" . }}
-{{ include "bigcapital.selectorLabels" . }}
+{{- define "fluxcp.labels" -}}
+helm.sh/chart: {{ include "fluxcp.chart" . }}
+{{ include "fluxcp.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/component: web
+app.kubernetes.io/part-of: {{ include "fluxcp.name" . }}
 {{- end }}
 
 {{/*
-Selector labels.
-
-These are emitted into BOTH `spec.selector.matchLabels` (immutable
-on Deployments) AND `spec.template.metadata.labels`, so they MUST
-be a stable, minimal set. Only `app.kubernetes.io/name` and
-`app.kubernetes.io/instance` are included; the chart version,
-helm release service, and `app.kubernetes.io/component` are
-deliberately omitted to keep upgrades safe.
+Selector labels (immutable: only name + instance).
 */}}
-{{- define "bigcapital.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "bigcapital.name" . }}
+{{- define "fluxcp.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "fluxcp.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use.
 */}}
-{{- define "bigcapital.serviceAccountName" -}}
+{{- define "fluxcp.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "bigcapital.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "fluxcp.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

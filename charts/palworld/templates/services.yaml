@@ -1,65 +1,54 @@
----
+{{- if .Values.server.service.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-svc"
+  name: {{ include "palworld.serverFullname" . }}
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-svc"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "palworld.serverLabels" . | nindent 4 }}
     {{- with .Values.server.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.server.service.annotations }}
   annotations:
-    {{- with .Values.server.service.annotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
+  type: {{ .Values.server.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-server"
+    {{- include "palworld.serverSelectorLabels" . | nindent 4 }}
   ports:
-    {{ if .Values.api.attach_to_game_server }}
+    {{- if .Values.api.attach_to_game_server }}
     - name: api
       port: {{ .Values.api.service.port }}
       protocol: {{ .Values.api.service.protocol }}
       targetPort: {{ .Values.api.config.port }}
-    {{ end }}
+    {{- end }}
     {{- with .Values.server.service.ports }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  type: {{ .Values.server.service.type }}
+{{- end }}
+{{- if and .Values.api.enabled .Values.api.service.enabled }}
 ---
-{{ if .Values.api.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-api-svc"
+  name: {{ include "palworld.apiFullname" . }}
   labels:
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: "{{ .Release.Name }}-api-svc"
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "{{ .Release.Name }}-api-svc"
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- include "palworld.apiLabels" . | nindent 4 }}
     {{- with .Values.api.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.api.service.annotations }}
   annotations:
-    {{- with .Values.api.service.annotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
+  type: {{ .Values.api.service.type }}
   selector:
-    app.kubernetes.io/component: "{{ .Release.Name }}-api"
+    {{- include "palworld.apiSelectorLabels" . | nindent 4 }}
   ports:
     - name: api
       port: {{ .Values.api.service.port }}
       protocol: {{ .Values.api.service.protocol }}
-      targetPort: {{ .Values.api.config.port }}
-  type: {{ .Values.api.service.type }}
-{{ end }}
+      targetPort: api
+{{- end }}

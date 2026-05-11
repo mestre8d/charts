@@ -1,0 +1,32 @@
+rAthena has been deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Services exposed in the cluster:
+{{- if .Values.servers.loginServer.service.create }}
+  - login-server : {{ include "rathena.fullname" . }}-login-server-svc:{{ .Values.servers.loginServer.service.port }} ({{ .Values.servers.loginServer.service.type }})
+{{- end }}
+{{- if .Values.servers.charServer.service.create }}
+  - char-server  : {{ include "rathena.fullname" . }}-char-server-svc:{{ .Values.servers.charServer.service.port }} ({{ .Values.servers.charServer.service.type }})
+{{- end }}
+{{- if .Values.servers.mapServer.service.create }}
+  - map-server   : {{ include "rathena.fullname" . }}-map-server-svc:{{ .Values.servers.mapServer.service.port }} ({{ .Values.servers.mapServer.service.type }})
+{{- end }}
+{{- if and .Values.servers.webServer.enable .Values.servers.webServer.service.create }}
+  - web-server   : {{ include "rathena.fullname" . }}-web-server-svc:{{ .Values.servers.webServer.service.port }} ({{ .Values.servers.webServer.service.type }})
+{{- end }}
+{{- if and .Values.servers.proxyServer.enable .Values.servers.proxyServer.service.create }}
+  - wsproxy      : {{ include "rathena.fullname" . }}-wsproxy-svc:{{ .Values.servers.proxyServer.service.port }} ({{ .Values.servers.proxyServer.service.type }})
+{{- end }}
+
+PREREQUISITE:
+  This chart does NOT bundle a database. You must provide a reachable
+  MariaDB/MySQL with the rAthena schemas already loaded. Configure host,
+  port, username, password, and database name under `databases.main` and
+  `databases.log` in values.yaml. Credentials are stored in a Secret named
+  "{{ include "rathena.fullname" . }}-secrets" and mounted into config files
+  at deploy time.
+
+Verify the deployment:
+  kubectl --namespace {{ .Release.Namespace }} get pods -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+Run the included connectivity test:
+  helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}

@@ -1,10 +1,35 @@
-# rathena-helm
+# rathena
 
-![Version: 0.0.300](https://img.shields.io/badge/Version-0.0.300-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 This chart can provide an rAthena emulator installation on a Kubernetes cluster.
 
 **Homepage:** <https://github.com/mestre8d/charts>
+
+## Prerequisites
+
+- Kubernetes 1.23+
+- An external **MariaDB / MySQL** server reachable from the cluster, with the
+  rAthena schemas (`main_db` / `log_db`) **already loaded**. This chart does
+  NOT bundle a database and does NOT load the schemas. Configure the host,
+  port, username, password, and database names under `databases.main` and
+  `databases.log` in `values.yaml`. Credentials are stored in a generated
+  Secret (`<release>-rathena-secrets`) and rendered into the inter-server
+  config files (`inter_conf.txt`, `char_conf.txt`, `map_conf.txt`) at
+  deploy time.
+- A StorageClass that supports the access modes configured under
+  `persistence.accessModes` (default `ReadWriteOnce`). The char-server and
+  map-server each get their own PVC for `/opt/rathena/log` and
+  `/opt/rathena/save`.
+
+## Notes
+
+- The char-server and map-server use `strategy: Recreate` because they are
+  stateful and the default PVC access mode is RWO.
+- The map-server has a generous `startupProbe` (`failureThreshold: 60`) to
+  allow for slow script loading on cold start.
+- Schema-loading is intentionally not handled by this chart. Run the rAthena
+  SQL files against your MariaDB/MySQL server before installing.
 
 ## Maintainers
 

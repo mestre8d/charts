@@ -2,217 +2,434 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ template "voting-app.fullname" . }}-vote"
-  namespace: {{ template "voting-app.namespace" . }}
+  name: {{ include "voting-app.fullname" . }}-vote
   labels:
-    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote"
-    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- include "voting-app.componentLabels" (dict "context" . "component" "vote") | nindent 4 }}
+    {{- with .Values.vote.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.vote.annotations }}
   annotations:
-  {{- toYaml . | nindent 6 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.vote.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote"
+      {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "vote") | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-vote"
-        {{- include "voting-app.labels" . | nindent 8 }}
-      {{- with .Values.vote.annotations }}
+        {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "vote") | nindent 8 }}
+        {{- with .Values.vote.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        {{- with .Values.vote.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.vote.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: vote
-          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
-          image: "{{ .Values.images.vote.name }}:{{ .Values.images.vote.tag }}"
+          image: "{{ .Values.vote.image.repository }}:{{ .Values.vote.image.tag }}"
+          imagePullPolicy: {{ .Values.vote.image.pullPolicy }}
+          {{- with .Values.vote.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: {{ .Values.vote.containerPort }}
+              protocol: TCP
           envFrom:
             - configMapRef:
-                name: "{{ template "voting-app.fullname" . }}-database-conf"
-    {{- if .Values.images.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
-    {{- end }}
+                name: {{ include "voting-app.fullname" . }}-database-conf
+          {{- with .Values.vote.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.vote.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.vote.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.vote.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.vote.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.vote.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ template "voting-app.fullname" . }}-result"
-  namespace: {{ template "voting-app.namespace" . }}
+  name: {{ include "voting-app.fullname" . }}-result
   labels:
-    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result"
-    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- include "voting-app.componentLabels" (dict "context" . "component" "result") | nindent 4 }}
+    {{- with .Values.result.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.result.annotations }}
   annotations:
-  {{- toYaml . | nindent 6 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.result.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result"
+      {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "result") | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-result"
-        {{- include "voting-app.labels" . | nindent 8 }}
-      {{- with .Values.result.annotations }}
+        {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "result") | nindent 8 }}
+        {{- with .Values.result.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.result.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.result.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: result
-          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
-          image: "{{ .Values.images.result.name }}:{{ .Values.images.result.tag }}"
+          image: "{{ .Values.result.image.repository }}:{{ .Values.result.image.tag }}"
+          imagePullPolicy: {{ .Values.result.image.pullPolicy }}
+          {{- with .Values.result.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: {{ .Values.result.containerPort }}
+              protocol: TCP
           env:
             - name: POSTGRES_HOST_STRING
               valueFrom:
                 secretKeyRef:
-                  name: "{{ template "voting-app.fullname" . }}-database-secret"
-                  key: "POSTGRES_HOST_STRING"
+                  name: {{ include "voting-app.fullname" . }}-database-secret
+                  key: POSTGRES_HOST_STRING
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ template "voting-app.fullname" . }}-database-secret"
-                  key: "POSTGRES_PASSWORD"
-    {{- if .Values.images.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
-    {{- end }}
+                  name: {{ include "voting-app.fullname" . }}-database-secret
+                  key: POSTGRES_PASSWORD
+          {{- with .Values.result.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.result.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.result.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.result.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.result.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.result.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ template "voting-app.fullname" . }}-worker"
-  namespace: {{ template "voting-app.namespace" . }}
+  name: {{ include "voting-app.fullname" . }}-worker
   labels:
-    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-worker"
-    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- include "voting-app.componentLabels" (dict "context" . "component" "worker") | nindent 4 }}
+    {{- with .Values.worker.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.worker.annotations }}
   annotations:
-  {{- toYaml . | nindent 6 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.worker.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-worker"
+      {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "worker") | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-worker"
-        {{- include "voting-app.labels" . | nindent 8 }}
-      {{- with .Values.worker.annotations }}
+        {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "worker") | nindent 8 }}
+        {{- with .Values.worker.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.worker.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: worker
-          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
-          image: "{{ .Values.images.worker.name }}:{{ .Values.images.worker.tag }}"
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          {{- with .Values.worker.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           envFrom:
             - configMapRef:
-                name: "{{ template "voting-app.fullname" . }}-database-conf"
+                name: {{ include "voting-app.fullname" . }}-database-conf
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ template "voting-app.fullname" . }}-database-secret"
-                  key: "POSTGRES_PASSWORD"
-    {{- if .Values.images.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
-    {{- end }}
+                  name: {{ include "voting-app.fullname" . }}-database-secret
+                  key: POSTGRES_PASSWORD
+          {{- with .Values.worker.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.worker.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ template "voting-app.fullname" . }}-database"
-  namespace: {{ template "voting-app.namespace" . }}
+  name: {{ include "voting-app.fullname" . }}-database
   labels:
-    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database"
-    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- include "voting-app.componentLabels" (dict "context" . "component" "database") | nindent 4 }}
+    {{- with .Values.database.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.database.annotations }}
   annotations:
-  {{- toYaml . | nindent 6 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.database.replicaCount }}
+  # RWO PVC: a rolling update would deadlock with two pods racing for
+  # the same volume. Recreate guarantees the old pod is gone first.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database"
+      {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "database") | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-database"
-        {{- include "voting-app.labels" . | nindent 8 }}
-      {{- with .Values.database.annotations }}
+        {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "database") | nindent 8 }}
+        {{- with .Values.database.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.database.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.database.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: database
-          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
-          image: "{{ .Values.images.database.name }}:{{ .Values.images.database.tag }}"
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          {{- with .Values.database.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
-            - containerPort: 5432
+            - name: postgres
+              containerPort: {{ .Values.database.containerPort }}
+              protocol: TCP
           envFrom:
             - configMapRef:
-                name: "{{ template "voting-app.fullname" . }}-database-conf"
+                name: {{ include "voting-app.fullname" . }}-database-conf
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ template "voting-app.fullname" . }}-database-secret"
-                  key: "POSTGRES_PASSWORD"
+                  name: {{ include "voting-app.fullname" . }}-database-secret
+                  key: POSTGRES_PASSWORD
+            # PGDATA pointed at a sub-directory so the postgres init
+            # doesn't trip on `lost+found` at the volume root.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          {{- with .Values.database.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.database.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.database.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+              subPath: pgdata
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: "{{ template "voting-app.fullname" . }}-database-pvc"
-    {{- if .Values.images.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
-    {{- end }}
+            claimName: {{ include "voting-app.fullname" . }}-database-pvc
+      {{- with .Values.database.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.database.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.database.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ template "voting-app.fullname" . }}-redis"
-  namespace: {{ template "voting-app.namespace" . }}
+  name: {{ include "voting-app.fullname" . }}-redis
   labels:
-    app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-redis"
-    {{- include "voting-app.labels" . | nindent 4 }}
+    {{- include "voting-app.componentLabels" (dict "context" . "component" "redis") | nindent 4 }}
+    {{- with .Values.redis.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.redis.annotations }}
   annotations:
-  {{- toYaml . | nindent 6 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.redis.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-redis"
+      {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "redis") | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: "{{ template "voting-app.fullname" . }}-redis"
-        {{- include "voting-app.labels" . | nindent 8 }}
-      {{- with .Values.redis.annotations }}
+        {{- include "voting-app.componentSelectorLabels" (dict "context" . "component" "redis") | nindent 8 }}
+        {{- with .Values.redis.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.redis.podAnnotations }}
       annotations:
-      {{- toYaml . | nindent 6 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
-        - name: vote
-          imagePullPolicy: {{ .Values.images.imagePullPolicy }}
-          image: "{{ .Values.images.redis.name }}:{{ .Values.images.redis.tag }}"
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          {{- with .Values.redis.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
-            - containerPort: 6379
-    {{- if .Values.images.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
-    {{- end }}
-
+            - name: redis
+              containerPort: {{ .Values.redis.containerPort }}
+              protocol: TCP
+          {{- with .Values.redis.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.redis.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.redis.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.redis.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

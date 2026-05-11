@@ -1,33 +1,129 @@
-# -- Container image parameters for the romm server
+# -- Override the chart name (used in resource names and labels).
+nameOverride: ""
+# -- Fully override the resource name prefix (otherwise computed from release name + chart name).
+fullnameOverride: ""
+
+# -- Container image parameters for the romm server.
 image:
-  imagePullSecrets: []
-  imagePullPolicy: Always
+  # -- Image repository.
   name: rommapp/romm
-  tag: 3.1.0
+  # -- Image tag. Defaults to .Chart.AppVersion if empty.
+  tag: ""
+  # -- Image pull policy.
+  imagePullPolicy: IfNotPresent
+
+# -- Image pull secrets used to fetch private images.
+imagePullSecrets: []
+
+# -- Number of replicas. Note: RomM mounts RWO PVCs by default; do not set > 1
+# unless you provide RWX storage AND set strategy to RollingUpdate.
 replicaCount: 1
-annotations: {}
+
+# -- Deployment strategy. RWO PVCs require Recreate to avoid upgrade deadlocks.
+strategy:
+  type: Recreate
+
+# -- Use an existing Secret instead of letting the chart create one. The Secret
+# must contain all of: db_host, db_name, db_user, db_password, db_port,
+# romm_db_driver, igdb_client_id, igdb_client_secret, moby_api_key, secret_key,
+# initial_username, initial_password, redis_host, redis_port, redis_password.
+existingSecret: ""
+
+# -- Extra labels applied to every resource.
 labels: {}
-# -- Server configuration block
+# -- Extra annotations applied to every resource.
+annotations: {}
+
+# -- Annotations applied to the pod template (in addition to the checksum
+# annotations the chart already injects).
+podAnnotations: {}
+# -- Extra labels applied to the pod template.
+podLabels: {}
+
+# -- Pod-level security context.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context. RomM needs a writable filesystem
+# (library scanning, asset cache), so readOnlyRootFilesystem is false.
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Compute resource requests and limits for the romm container.
+resources: {}
+
+# -- Node selector for pod assignment.
+nodeSelector: {}
+# -- Tolerations for pod assignment.
+tolerations: []
+# -- Affinity for pod assignment.
+affinity: {}
+# -- Priority class name for the pod.
+priorityClassName: ""
+
+# -- ServiceAccount creation/configuration.
+serviceAccount:
+  # -- Whether to create a ServiceAccount.
+  create: true
+  # -- Whether the ServiceAccount token should be auto-mounted in the pod.
+  automount: false
+  # -- Annotations applied to the ServiceAccount.
+  annotations: {}
+  # -- Override ServiceAccount name. Defaults to the fullname.
+  name: ""
+
+# -- External Redis connection (RomM 3.x requires Redis). The chart does NOT
+# bundle Redis: provision it externally (e.g. via Bitnami's Redis chart).
+redis:
+  # -- Hostname of the Redis instance.
+  host: ""
+  # -- Port of the Redis instance.
+  port: 6379
+  # -- Password for the Redis instance. Stored in the chart-managed Secret
+  # unless redis.existingSecret is set.
+  password: ""
+  # -- Existing Secret to read the Redis password from. Must contain a
+  # `redis-password` key.
+  existingSecret: ""
+
+# -- Server configuration block.
 server:
   annotations: {}
   labels: {}
+  # -- Container port (matches RomM upstream).
+  containerPort: 8080
   # -- Allows configuring the romm app and also set up some environment credentials here.
   # @bigValue
   configuration:
-    # -- Insert here the config.yaml parameters for the romm.
+    # -- Insert here the config.yaml parameters for the romm. Rendered as the
+    # contents of /romm/config/config.yml. Pass a multi-line string.
     config: ""
     # -- Allows configuring the romm app database credentials.
     # @bigValue
     database:
-      # -- Main database host address
+      # -- Database driver. RomM supports `mariadb` (default) or `postgresql`.
+      driver: "mariadb"
+      # -- Main database host address (REQUIRED unless existingSecret is set).
       host: ""
-      # -- Main database host port
+      # -- Main database host port.
       port: "3306"
-      # -- Main database username
+      # -- Main database username.
       username: ""
-      # -- Main database password
+      # -- Main database password (REQUIRED unless existingSecret is set).
       password: ""
-      # -- Main database schema name
+      # -- Main database schema name.
       name: ""
     # -- The IGDB client ID to be stored on a secret. Should be a text plain value.
     igdbClientId: ""
@@ -35,61 +131,125 @@ server:
     igdbClientSecret: ""
     # -- The MobyAPI key to be stored on a secret. Should be a text plain value.
     mobyApiKey: ""
-    # -- The secret key for the romm app. You can generate one with the command 'openssl rand -hex 32'
+    # -- The secret key for the romm app. You can generate one with the command 'openssl rand -hex 32'.
     secretKey: ""
     # -- The initial username of the romm app.
     initialUsername: "admin"
-    # -- The initial password for the initial user of the romm app.
+    # -- The initial password for the initial user of the romm app. If empty,
+    # a random one is generated and preserved across upgrades via Helm lookup.
     initialPassword: ""
+
+  # -- Timezone, PUID, PGID environment variables (RomM upstream supports these).
+  env:
+    TZ: "Etc/UTC"
+    PUID: 1000
+    PGID: 1000
+
+  # -- Extra environment variables to inject into the container.
+  extraEnv: []
+  # -- Extra volumes attached to the pod.
+  extraVolumes: []
+  # -- Extra volume mounts attached to the romm container.
+  extraVolumeMounts: []
+
   # -- Allows controlling the service creation and parameters.
   service:
     annotations: {}
     labels: {}
-    # -- Enable/disables the creation of the service
+    # -- Enable/disables the creation of the service.
     create: true
-    # -- Port that service will be listening
+    # -- Port that service will be listening on.
     port: 9080
     # -- Type of service.
     type: ClusterIP
+
+  # -- Liveness probe. Targets the named `http` port on `/api/heartbeat`.
   livenessProbe:
-    # -- Delay to start probing the pod
+    httpGet:
+      path: /api/heartbeat
+      port: http
     initialDelaySeconds: 30
-    # -- Delay between probes on the pod
-    periodSeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+  # -- Readiness probe.
+  readinessProbe:
+    httpGet:
+      path: /api/heartbeat
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  # -- Startup probe. RomM first boot runs DB migrations and fetches an IGDB
+  # token, both of which can be slow on under-provisioned clusters.
+  startupProbe:
+    httpGet:
+      path: /api/heartbeat
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    # 30 * 10s = 5 minutes before the pod is killed.
+    failureThreshold: 30
+
   ingress:
     annotations: {}
     labels: {}
-    # -- Enable/disables the creation of the Ingress
+    # -- Enable/disables the creation of the Ingress.
     create: false
-    # -- The ingress class name
+    # -- The ingress class name.
     ingressClassName: ""
-    # -- Multiple paths configuration.
-    paths: []
-    # -- Default path configuration
-    path: "/"
+    # -- Single host ingress (kept for backwards compatibility). Prefer `hosts`.
     hostName: ""
+    # -- Default path configuration when no `paths` is provided.
+    path: "/"
+    # -- Default pathType.
+    pathType: Prefix
+    # -- Multiple paths configuration (advanced).
+    paths: []
+    # -- List of hosts. Each item: { host, paths: [{ path, pathType }] }.
+    # If empty, falls back to .hostName + .path/.pathType.
+    hosts: []
     resourceRootUrl: ""
-    # TLS secret configuration
+    # -- TLS configuration. Leave empty `{}` to disable. Either set a list
+    # explicitly (`[{secretName: foo, hosts: [bar]}]`) or set `secretName`
+    # to apply a single TLS block to all `hosts`/`hostName`.
     tls: {}
+
 storage:
   resources:
     annotations: {}
     labels: {}
     # -- Enable/disable the persistence of resources data directory.
     persist: false
-    # -- The size of the PV for the resources' directory.
-    size: 2G
-    # -- The storage class name to be set up on the PV
+    # -- The size of the PV for the resources directory.
+    size: 2Gi
+    # -- Access modes for the PVC.
+    accessModes:
+      - ReadWriteOnce
+    # -- The storage class name to be set up on the PV.
     storageClassName: ""
+    # -- Set the helm.sh/resource-policy=keep annotation on the PVC so it
+    # survives a `helm uninstall`.
+    keepOnUninstall: false
   assets:
     annotations: {}
     labels: {}
     # -- Enable/disable the persistence of assets directory.
     persist: false
-    # -- The size of the PV for the assets' directory.
-    size: 2G
-    # -- The storage class name to be set up on the PV
+    # -- The size of the PV for the assets directory.
+    size: 2Gi
+    # -- Access modes for the PVC.
+    accessModes:
+      - ReadWriteOnce
+    # -- The storage class name to be set up on the PV.
     storageClassName: ""
+    # -- Set the helm.sh/resource-policy=keep annotation on the PVC so it
+    # survives a `helm uninstall`.
+    keepOnUninstall: false
   library:
     annotations: {}
     labels: {}
@@ -99,8 +259,18 @@ storage:
     # The storage.library.persist should be true for this to work.
     # If storage.library.persist is true and this is empty, a PVC will be created.
     hostPath: ""
+    # -- Mount the library volume read-only. Useful when the library is
+    # populated out-of-band (e.g. via NFS or a hostPath shared with another
+    # process).
+    readOnly: false
     # -- The size of the PV for the library directory. Ignored if storage.library.hostPath is used.
-    size: 32G
-    # -- The storage class name to be set up on the PV
+    size: 32Gi
+    # -- Access modes for the PVC.
+    accessModes:
+      - ReadWriteOnce
+    # -- The storage class name to be set up on the PV.
     storageClassName: ""
-
+    # -- Set the helm.sh/resource-policy=keep annotation on the PVC so the
+    # ROM library is not destroyed by a `helm uninstall`. Recommended `true`
+    # for production.
+    keepOnUninstall: false

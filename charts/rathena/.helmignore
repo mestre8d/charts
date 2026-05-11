@@ -1,0 +1,17 @@
+# Patterns to ignore when building Helm charts.
+# Mac OS / Editor backups
+.DS_Store
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+# VCS dirs
+.git/
+.gitignore
+.github/
+# IDE
+.idea/
+.vscode/
+# CI / docs not needed in the packaged chart
+README.md.gotmpl
