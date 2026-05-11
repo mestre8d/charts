@@ -9,15 +9,15 @@ fullnameOverride: ""
 
 image:
   # -- Image pull policy applied to the rAthena server containers.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
   # -- rAthena container image (login/char/map/web servers).
   name: ghcr.io/filipe-souza/rathena
   # -- rAthena container image tag.
   tag: v0.0.1-alpine
 
 # -- References to secrets in the same namespace used to pull container images.
-imagePullSecrets: []
-# - name: registry-auth
+imagePullSecrets:
+  - name: registry-auth
 
 serviceAccount:
   # -- Whether a ServiceAccount should be created for the chart.
@@ -227,6 +227,7 @@ servers:
     image:
       name: ghcr.io/filipe-souza/rathena
       tag: wsproxy
+      imagePullPolicy: Always
       imagePullPolicy: IfNotPresent
     # -- Number of replicas of this pod
     replicas: 1

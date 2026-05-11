@@ -8,9 +8,9 @@ image:
   # -- Image repository.
   name: rommapp/romm
   # -- Image tag. Defaults to .Chart.AppVersion if empty.
-  tag: ""
+  tag: "3.1.0"
   # -- Image pull policy.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
 
 # -- Image pull secrets used to fetch private images.
 imagePullSecrets: []

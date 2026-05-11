@@ -22,7 +22,7 @@ All tunables live in `values.yaml`. The most relevant sections are documented be
 | Key | Default | Description |
 |---|---|---|
 | `server.secret_string` | `""` | If set, used verbatim as `APP_JWT_SECRET` in the rendered Secret. If empty, the chart reuses the existing in-cluster value (when present) or generates a fresh 64-character random string on first install. |
-| `server.image.*` | `docker.io/bigcapitalhq/server:latest` | Server container image. |
+| `server.image.*` | `ghcr.io/bigcapitalhq/server:latest` | Server container image. |
 | `server.service.port` | `3000` | Port the server listens on inside the Pod. |
 
 ### `database` — in-cluster MariaDB

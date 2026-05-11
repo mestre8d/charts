@@ -168,10 +168,10 @@ database:
   annotations: {}
   labels: {}
   image:
-    registry: "docker.io"
-    image: "library/mariadb"
-    tag: "10"
-    pullPolicy: IfNotPresent
+    registry: "ghcr.io"
+    image: "mestre8d/bigcapital-docker"
+    tag: "mariadb-10"
+    pullPolicy: Always
     imagePullSecrets: []
   service:
     enabled: true
@@ -239,10 +239,10 @@ redis:
   annotations: {}
   labels: {}
   image:
-    registry: "docker.io"
-    image: "library/redis"
-    tag: "6"
-    pullPolicy: IfNotPresent
+    registry: "ghcr.io"
+    image: "mestre8d/bigcapital-docker"
+    tag: "redis-6"
+    pullPolicy: Always
     imagePullSecrets: []
   service:
     enabled: true

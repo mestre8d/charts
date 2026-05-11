@@ -32,7 +32,7 @@ vote:
   image:
     repository: ghcr.io/filipe-souza/example-voting-app-docker
     tag: vote-v0.0.1
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   # -- Container port the application listens on.
   containerPort: 80
   # -- Extra labels added to the Service / Ingress / etc. metadata.
@@ -98,7 +98,7 @@ result:
   image:
     repository: ghcr.io/filipe-souza/example-voting-app-docker
     tag: result-v0.0.1
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   containerPort: 80
   labels: {}
   annotations: {}
@@ -151,7 +151,7 @@ worker:
   image:
     repository: ghcr.io/filipe-souza/example-voting-app-docker
     tag: worker-v0.0.1
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   labels: {}
   annotations: {}
   podLabels: {}
@@ -189,9 +189,8 @@ database:
   replicaCount: 1
   image:
     repository: postgres
-    # -- Pinned to the alpine variant. Bump deliberately.
-    tag: 14.12-alpine
-    pullPolicy: IfNotPresent
+    tag: "14"
+    pullPolicy: Always
   containerPort: 5432
   labels: {}
   annotations: {}
@@ -246,8 +245,8 @@ redis:
   replicaCount: 1
   image:
     repository: redis
-    tag: 7.4.1-alpine
-    pullPolicy: IfNotPresent
+    tag: "7.4"
+    pullPolicy: Always
   containerPort: 6379
   labels: {}
   annotations: {}
