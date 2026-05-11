@@ -1,5 +1,8 @@
 # Bigcapital Helm Chart
 
+> [!IMPORTANT]
+> This helm chart uses custom container images available at [mestre8d/bigcapital-docker](https://github.com/orgs/mestre8d/packages/container/package/bigcapital-docker) registry, but you can build your own based on the container recipe from the original repository.
+
 A Helm chart for deploying [Bigcapital](https://github.com/bigcapitalhq/bigcapital) on Kubernetes. The chart packages the upstream Docker images for the `webapp`, `server`, `gotenberg` (PDF rendering), MariaDB, and Redis into a single Pod, and renders an `app-env` Secret containing the server's environment configuration.
 
 ## Quick start

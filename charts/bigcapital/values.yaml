@@ -1,0 +1,180 @@
+# Default values for bigcapital.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+webapp:
+  resources: {}
+  annotations: {}
+  labels: {}
+  image:
+    registry: " ghcr.io"
+    image: "bigcapitalhq/webapp"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+    imagePullSecrets: []
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: false
+    annotations: {}
+    labels: {}
+    ingressClassName: ""
+    # List of hosts and the paths they expose. Each path is routed to the
+    # webapp Service on `webapp.service.port`.
+    #
+    # Example:
+    #   hosts:
+    #     - host: bigcapital.example.com
+    #       paths:
+    #         - path: /
+    #           pathType: Prefix
+    hosts: []
+    # Optional TLS blocks, passed through verbatim to spec.tls.
+    #
+    # Example:
+    #   tls:
+    #     - hosts:
+    #         - bigcapital.example.com
+    #       secretName: bigcapital-tls
+    tls: []
+
+
+server:
+  resources: {}
+  annotations: {}
+  labels: {}
+  secret_string: ""
+  image:
+    registry: " ghcr.io"
+    image: "bigcapitalhq/server"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+    imagePullSecrets: []
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 3000
+
+gotenberg:
+  resources: {}
+  annotations: {}
+  labels: {}
+  image:
+    registry: " ghcr.io"
+    image: "gotenberg/gotenberg"
+    tag: "7"
+    pullPolicy: IfNotPresent
+    imagePullSecrets: []
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 9000
+  storage:
+    size: 1Gi
+    storageClass: "baltasar-iscsi"
+    accessMode: ReadWriteOnce
+    annotations: {}
+    labels: {}
+
+database:
+  # Set to false to skip rendering the in-cluster MariaDB container/PVC
+  # and instead use the external database defined under `database.external`.
+  enabled: true
+  resources: {}
+  annotations: {}
+  labels: {}
+  image:
+    registry: "ghcr.io"
+    image: "mestre8d/bigcapital-docker"
+    tag: "mariadb-10"
+    pullPolicy: Always
+    imagePullSecrets: []
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 3306
+  storage:
+    size: 1Gi
+    storageClass: "baltasar-iscsi"
+    accessMode: ReadWriteOnce
+    annotations: {}
+    labels: {}
+  # Credentials and DB names used when running the in-cluster MariaDB
+  # (i.e. when `database.external.enabled` is false). These are also
+  # used to initialize the MariaDB container (MYSQL_* env vars).
+  #
+  # NOTE: `charset` and `tenantDbPrefix` are intentionally NOT exposed.
+  # Upstream bigcapital hardcodes `charset: utf8` and the tenant DB prefix
+  # `bigcapital_tenant_` in its runtime Knex connections, so overriding
+  # them either has no effect or breaks tenant connectivity.
+  credentials:
+    host: ""              # leave empty to default to the in-cluster service hostname
+    port: 3306
+    user: "bigcapital"
+    password: "bigcapital"
+    rootPassword: "root"
+    systemDbName: "bigcapital_system"
+  # Use an external database instead of the bundled MariaDB.
+  # When `enabled: true`, these values override `database.credentials`
+  # in the rendered `app-env` Secret, and the in-cluster MariaDB
+  # container/PVC are NOT rendered.
+  #
+  # The `bigcapital` server creates and drops tenant databases dynamically
+  # (CREATE DATABASE bigcapital_tenant_<id>), so the `user` here MUST have
+  # global CREATE and DROP privileges on the database server.
+  external:
+    enabled: false
+    host: ""
+    port: 3306
+    user: ""
+    password: ""
+    rootPassword: ""
+    systemDbName: ""
+
+redis:
+  enabled: true
+  resources: {}
+  annotations: {}
+  labels: {}
+  image:
+    registry: "ghcr.io"
+    image: "mestre8d/bigcapital-docker"
+    tag: "redis-6"
+    pullPolicy: Always
+    imagePullSecrets: []
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 6379
+  storage:
+    size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    annotations: {}
+    labels: {}
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
