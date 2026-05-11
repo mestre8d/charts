@@ -9,9 +9,9 @@ fullnameOverride: ""
 
 image:
   # -- Image pull policy applied to the rAthena server containers.
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   # -- rAthena container image (login/char/map/web servers).
-  name: ghcr.io/filipe-souza/rathena
+  name: ghcr.io/mestre8d/rathena
   # -- rAthena container image tag.
   tag: v0.0.1-alpine
 
@@ -225,9 +225,8 @@ servers:
     # -- Enables the websocket proxy service, allowing the usage of roBrowser clients.
     enable: true
     image:
-      name: ghcr.io/filipe-souza/rathena
+      name: ghcr.io/mestre8d/rathena
       tag: wsproxy
-      imagePullPolicy: Always
       imagePullPolicy: IfNotPresent
     # -- Number of replicas of this pod
     replicas: 1

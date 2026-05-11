@@ -91,7 +91,7 @@ server:
   # @notationType -- bigValue
   image:
     # -- Name of the image, without the tag.
-    name: thijsvanloef/palworld-server-docker
+    name: ghcr.io/mestre8d/palworld-server-docker
     # -- The tag of the image.
     tag: latest
     # -- Define the pull policy for the server image.
@@ -304,7 +304,7 @@ api:
   # @notationType -- bigValue
   image:
     # -- Name of the image, without the tag.
-    name: valamidev/palworld-rcon-buddy
+    name: ghcr.io/mestre8d/palworld-rcon-buddy
     # -- The tag of the image.
     tag: latest
     # -- Pull policy for the api image.

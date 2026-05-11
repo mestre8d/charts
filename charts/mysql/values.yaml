@@ -1,19 +1,19 @@
 ## mysql image version
 ## ref: https://hub.docker.com/r/library/mysql/tags/
 ##
-image: "mysql"
+image: "ghcr.io/mestre8d/mysql"
 imageTag: "5.7.30"
 
 strategy:
   type: Recreate
 
 busybox:
-  image: "busybox"
+  image: "ghcr.io/mestre8d/busybox"
   tag: "1.36"
 
 testFramework:
   enabled: true
-  image: "bats/bats"
+  image: "ghcr.io/mestre8d/bats"
   tag: "v1.10.0"
   imagePullPolicy: IfNotPresent
   securityContext: {}
@@ -163,7 +163,7 @@ mysqlx:
 
 metrics:
   enabled: false
-  image: prom/mysqld-exporter
+  image: ghcr.io/mestre8d/mysqld-exporter
   imageTag: v0.15.0
   imagePullPolicy: IfNotPresent
   resources: {}

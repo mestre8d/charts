@@ -6,11 +6,11 @@ fullnameOverride: ""
 # -- Container image parameters for the romm server.
 image:
   # -- Image repository.
-  name: rommapp/romm
+  name: ghcr.io/mestre8d/romm
   # -- Image tag. Defaults to .Chart.AppVersion if empty.
   tag: "3.1.0"
   # -- Image pull policy.
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
 
 # -- Image pull secrets used to fetch private images.
 imagePullSecrets: []

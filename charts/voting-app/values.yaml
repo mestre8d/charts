@@ -30,9 +30,9 @@ vote:
   # -- Number of pod replicas.
   replicaCount: 1
   image:
-    repository: ghcr.io/filipe-souza/example-voting-app-docker
+    repository: ghcr.io/mestre8d/example-voting-app-docker
     tag: vote-v0.0.1
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   # -- Container port the application listens on.
   containerPort: 80
   # -- Extra labels added to the Service / Ingress / etc. metadata.
@@ -96,9 +96,9 @@ vote:
 result:
   replicaCount: 1
   image:
-    repository: ghcr.io/filipe-souza/example-voting-app-docker
+    repository: ghcr.io/mestre8d/example-voting-app-docker
     tag: result-v0.0.1
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   containerPort: 80
   labels: {}
   annotations: {}
@@ -149,9 +149,9 @@ result:
 worker:
   replicaCount: 1
   image:
-    repository: ghcr.io/filipe-souza/example-voting-app-docker
+    repository: ghcr.io/mestre8d/example-voting-app-docker
     tag: worker-v0.0.1
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   labels: {}
   annotations: {}
   podLabels: {}
@@ -188,9 +188,9 @@ worker:
 database:
   replicaCount: 1
   image:
-    repository: postgres
+    repository: ghcr.io/mestre8d/postgres
     tag: "14"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   containerPort: 5432
   labels: {}
   annotations: {}
@@ -244,9 +244,9 @@ database:
 redis:
   replicaCount: 1
   image:
-    repository: redis
+    repository: ghcr.io/mestre8d/redis
     tag: "7.4"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   containerPort: 6379
   labels: {}
   annotations: {}

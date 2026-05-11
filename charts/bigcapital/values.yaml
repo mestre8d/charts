@@ -31,8 +31,8 @@ webapp:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "bigcapitalhq/webapp"
+    registry: "ghcr.io/mestre8d"
+    image: "webapp"
     tag: "latest"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -91,8 +91,8 @@ server:
   labels: {}
   secret_string: ""
   image:
-    registry: "ghcr.io"
-    image: "bigcapitalhq/server"
+    registry: "ghcr.io/mestre8d"
+    image: "server"
     tag: "latest"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -123,8 +123,8 @@ gotenberg:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "gotenberg/gotenberg"
+    registry: "ghcr.io/mestre8d"
+    image: "gotenberg"
     tag: "7"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -168,10 +168,10 @@ database:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "mestre8d/bigcapital-docker"
+    registry: "ghcr.io/mestre8d"
+    image: "bigcapital-docker"
     tag: "mariadb-10"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     imagePullSecrets: []
   service:
     enabled: true
@@ -239,10 +239,10 @@ redis:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "mestre8d/bigcapital-docker"
+    registry: "ghcr.io/mestre8d"
+    image: "bigcapital-docker"
     tag: "redis-6"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     imagePullSecrets: []
   service:
     enabled: true
