@@ -1,115 +1,250 @@
----
+{{- include "palworld.validateApi" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-server"
+  name: {{ include "palworld.serverFullname" . }}
+  labels:
+    {{- include "palworld.serverLabels" . | nindent 4 }}
+    {{- with .Values.server.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.server.strategy }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-server"
-  strategy:
-    type: "{{ .Values.server.strategy }}"
+      {{- include "palworld.serverSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- with .Values.server.annotations }}
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "palworld.serverLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- with .Values.server.labels }}
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "palworld.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml (default .Values.podSecurityContext .Values.server.podSecurityContext) | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
-        {{ if .Values.api.attach_to_game_server }}
+        {{- if .Values.api.attach_to_game_server }}
         - name: api
           image: "{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.imagePullPolicy }}
+          securityContext:
+            {{- toYaml (default .Values.securityContext .Values.api.securityContext) | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: "{{ .Release.Name }}-api-env-config"
+                name: {{ include "palworld.apiFullname" . }}-env
+          env:
+            - name: PALWORLD_RCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "palworld.serverFullname" . }}
+                  key: rconPassword
+            - name: BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "palworld.serverFullname" . }}
+                  key: bearerToken
           ports:
             - name: api
               containerPort: {{ .Values.api.config.port }}
               protocol: TCP
-        {{ end }}
+          {{- with .Values.api.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
         - name: server
           image: "{{ .Values.server.image.name }}:{{ .Values.server.image.tag }}"
           imagePullPolicy: {{ .Values.server.image.imagePullPolicy }}
-          resources:
-            {{- with .Values.server.resources }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
+          securityContext:
+            {{- toYaml (default .Values.securityContext .Values.server.securityContext) | nindent 12 }}
           ports:
             {{- with .Values.server.ports }}
-              {{- toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           env:
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-rcon-password"
-                  key: "rconPassword"
+                  name: {{ include "palworld.serverFullname" . }}
+                  key: rconPassword
           envFrom:
             - configMapRef:
-                name: "{{ .Release.Name }}-env-config"
+                name: {{ include "palworld.serverFullname" . }}-env
+          {{- with .Values.server.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - mountPath: /palworld
-              name: datadir
+            - name: datadir
+              mountPath: /palworld
       volumes:
         - name: datadir
           persistentVolumeClaim:
-            {{- if not .Values.server.storage.external }}
-            claimName: "{{ .Release.Name }}-datadir-pvc"
-            {{ else }}
-            claimName: "{{ .Values.server.storage.externalName }}"
-            {{ end }}
+            {{- if .Values.server.storage.external }}
+            claimName: {{ .Values.server.storage.externalName | quote }}
+            {{- else }}
+            claimName: {{ include "palworld.serverFullname" . }}-datadir
+            {{- end }}
+{{- if .Values.api.enabled }}
 ---
-{{ if .Values.api.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-api"
+  name: {{ include "palworld.apiFullname" . }}
+  labels:
+    {{- include "palworld.apiLabels" . | nindent 4 }}
+    {{- with .Values.api.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.api.strategy }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-api"
-  strategy:
-    type: "{{ .Values.server.strategy }}"
+      {{- include "palworld.apiSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
-        {{- with .Values.server.annotations }}
-        {{- toYaml . | nindent 4 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.api.annotations }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-api"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-api"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "palworld.apiLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- with .Values.api.labels }}
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "palworld.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      securityContext:
+        {{- toYaml (default .Values.podSecurityContext .Values.api.podSecurityContext) | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: api
           image: "{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.imagePullPolicy }}
+          securityContext:
+            {{- toYaml (default .Values.securityContext .Values.api.securityContext) | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: "{{ .Release.Name }}-api-env-config"
+                name: {{ include "palworld.apiFullname" . }}-env
+          env:
+            - name: PALWORLD_RCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "palworld.serverFullname" . }}
+                  key: rconPassword
+            - name: BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "palworld.serverFullname" . }}
+                  key: bearerToken
           ports:
-            - name: "api"
-              containerPort: 3000
+            - name: api
+              containerPort: {{ .Values.api.config.port }}
               protocol: TCP
-        {{ end }}
+          {{- with .Values.api.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

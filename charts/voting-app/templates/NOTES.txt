@@ -1,0 +1,44 @@
+Thanks for installing {{ .Chart.Name }} ({{ .Chart.Name }}-{{ .Chart.Version }}, app {{ .Chart.AppVersion }}).
+
+Release name: {{ .Release.Name }}
+Namespace:    {{ .Release.Namespace }}
+
+Components installed:
+  - vote     (frontend, port {{ .Values.vote.service.port }})
+  - result   (frontend, port {{ .Values.result.service.port }})
+  - worker   (background)
+  - redis    (queue,    port {{ .Values.redis.service.port }})
+  - database (postgres, port {{ .Values.database.service.port }})
+
+In-cluster service DNS:
+  vote:     {{ include "voting-app.fullname" . }}-vote-svc.{{ .Release.Namespace }}.svc.{{ .Values.clusterZone }}
+  result:   {{ include "voting-app.fullname" . }}-result-svc.{{ .Release.Namespace }}.svc.{{ .Values.clusterZone }}
+  redis:    {{ include "redis.host" . }}
+  postgres: {{ include "postgres.host" . }}
+
+{{- if .Values.vote.ingress.create }}
+
+Vote Ingress is enabled{{ with .Values.vote.ingress.hostName }} at host "{{ . }}"{{ end }}.
+{{- else }}
+
+To reach the vote UI from your workstation:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "voting-app.fullname" . }}-vote-svc 8080:{{ .Values.vote.service.port }}
+  # then open http://localhost:8080
+{{- end }}
+
+{{- if .Values.result.ingress.create }}
+
+Result Ingress is enabled{{ with .Values.result.ingress.hostName }} at host "{{ . }}"{{ end }}.
+{{- else }}
+
+To reach the result UI from your workstation:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "voting-app.fullname" . }}-result-svc 8081:{{ .Values.result.service.port }}
+  # then open http://localhost:8081
+{{- end }}
+
+To retrieve the generated database password:
+  kubectl --namespace {{ .Release.Namespace }} get secret {{ include "voting-app.fullname" . }}-database-secret \
+    -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 -d ; echo
+
+To verify the install:
+  helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}

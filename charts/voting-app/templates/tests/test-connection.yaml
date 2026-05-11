@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "voting-app.fullname" . }}-test-connection"
+  labels:
+    {{- include "voting-app.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  serviceAccountName: {{ include "voting-app.serviceAccountName" . }}
+  automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+  {{- with .Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "Probing vote..."
+          wget -q -O- --tries=10 --timeout=5 \
+            http://{{ include "voting-app.fullname" . }}-vote-svc:{{ .Values.vote.service.port }}/ > /dev/null
+          echo "Probing result..."
+          wget -q -O- --tries=10 --timeout=5 \
+            http://{{ include "voting-app.fullname" . }}-result-svc:{{ .Values.result.service.port }}/ > /dev/null
+          echo "OK"

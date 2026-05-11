@@ -1,20 +1,86 @@
-namespace: rathena
+# Default values for rathena.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Override the chart name (used in resource names).
+nameOverride: ""
+# -- Override the full release name.
+fullnameOverride: ""
+
 image:
-  imagePullPolicy: Always
-  imagePullSecrets:
-  - name: registry-auth
-  name: ghcr.io/filipe-souza/rathena
+  # -- Image pull policy applied to the rAthena server containers.
+  imagePullPolicy: IfNotPresent
+  # -- rAthena container image (login/char/map/web servers).
+  name: ghcr.io/mestre8d/rathena
+  # -- rAthena container image tag.
   tag: v0.0.1-alpine
-replicaCount: 1
+
+# -- References to secrets in the same namespace used to pull container images.
+imagePullSecrets:
+  - name: registry-auth
+
+serviceAccount:
+  # -- Whether a ServiceAccount should be created for the chart.
+  create: true
+  # -- Auto-mount the ServiceAccount token into pods.
+  automount: false
+  # -- Annotations to add to the ServiceAccount.
+  annotations: {}
+  # -- Override the ServiceAccount name. If empty, a name is generated.
+  name: ""
+
+# -- Annotations applied to all pods.
+podAnnotations: {}
+# -- Labels applied to all pods.
+podLabels: {}
+
+# -- nodeSelector applied to all pods.
+nodeSelector: {}
+# -- Tolerations applied to all pods.
+tolerations: []
+# -- Affinity rules applied to all pods.
+affinity: {}
+# -- priorityClassName applied to all pods.
+priorityClassName: ""
+
+# -- Pod-level security context applied to every Deployment.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context applied to every server container.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Persistence settings for the stateful char/map servers.
+# rAthena writes log files and persistent character state under /opt/rathena.
+# Without persistence, data is lost on every restart.
+persistence:
+  # -- Enable creation of PersistentVolumeClaims for char and map servers.
+  enabled: true
+  # -- StorageClass to use. Empty string uses the cluster default.
+  storageClass: ""
+  # -- Access modes for the PVCs.
+  accessModes:
+    - ReadWriteOnce
+  # -- Size of each PVC (one for char, one for map).
+  size: 10Gi
+
 databases:
   main:
     # -- Main database host address
     host: "127.0.0.1"
     # -- Main database host port
     port: "3306"
-    # -- Main database username
+    # -- Main database username (stored in Secret).
     username: "ragnarok"
-    # -- Main database password
+    # -- Main database password (stored in Secret).
     password: "ragnarok"
     # -- Main database schema name
     name: "ragnarok"
@@ -23,22 +89,27 @@ databases:
     host: "127.0.0.1"
     # -- Log database host port
     port: "3306"
-    # -- Log database username
+    # -- Log database username (stored in Secret).
     username: "ragnarok"
-    # -- Log database password
+    # -- Log database password (stored in Secret).
     password: "ragnarok"
     # -- Log database schema name
     name: "log"
+
 servers:
-  annotations: {}
-  labels: {}
   # -- Sets the server_name into the char_conf.txt
   globalName: rAthena
+  # -- Configures the credentials to be stored into the config files for the inter-server authentication.
+  # Stored in a Secret and rendered into inter_conf.txt at runtime.
+  interServer:
+    auth:
+      passwd: p1
+      userid: s1
   charServer:
-    # -- Annotations for the Char Server components
-    annotations: {}
-    # -- Number of replicas of this pod
+    # -- Number of replicas. Char server is stateful + RWO; keep at 1.
     replicas: 1
+    # -- Container port the char-server listens on.
+    containerPort: 6121
     resources:
       limits:
         cpu: "1"
@@ -47,10 +118,19 @@ servers:
         cpu: "0.5"
         memory: "512Mi"
     livenessProbe:
-      # -- Delay to start probing the pod
+      tcpSocket:
+        port: char-server
       initialDelaySeconds: 30
-      # -- Delay between probes on the pod
       periodSeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: char-server
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
     service:
       annotations: {}
       labels: {}
@@ -61,12 +141,12 @@ servers:
       # -- Type of service.
       type: ClusterIP
   loginServer:
-    # -- Annotations for the Login Server components
-    annotations: {}
-    # -- Set this value to yes if going to use MySQL 8.0
-    md5Password: no
+    # -- Set this value to "yes" if going to use MySQL 8.0. Quoted to prevent YAML boolean coercion.
+    md5Password: "no"
     # -- Number of replicas of this pod
     replicas: 1
+    # -- Container port the login-server listens on.
+    containerPort: 6900
     resources:
       limits:
         cpu: "1"
@@ -75,13 +155,22 @@ servers:
         cpu: "0.5"
         memory: "512Mi"
     livenessProbe:
-      # -- Delay to start probing the pod
+      tcpSocket:
+        port: login-server
       initialDelaySeconds: 15
-      # -- Delay between probes on the pod
       periodSeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: login-server
+      initialDelaySeconds: 5
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
     service:
-      labels: {}
       annotations: {}
+      labels: {}
       # -- Enable/disables the creation of the service
       create: true
       # -- Port that service will be listening
@@ -89,10 +178,10 @@ servers:
       # -- Type of service.
       type: ClusterIP
   mapServer:
-    # -- Annotations for the Map Server components
-    annotations: {}
-    # -- Number of replicas of this pod
+    # -- Number of replicas. Map server is stateful + RWO; keep at 1.
     replicas: 1
+    # -- Container port the map-server listens on.
+    containerPort: 5121
     resources:
       limits:
         cpu: "1"
@@ -101,10 +190,28 @@ servers:
         cpu: "0.5"
         memory: "512Mi"
     livenessProbe:
-      # -- Delay to start probing the pod
-      initialDelaySeconds: 30
-      # -- Delay between probes on the pod
+      tcpSocket:
+        port: map-server
+      initialDelaySeconds: 60
       periodSeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: map-server
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    # Map server can take a long time to load all scripts on cold start.
+    # The startup probe blocks liveness until the server is actually up.
+    startupProbe:
+      tcpSocket:
+        port: map-server
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 60
     service:
       annotations: {}
       labels: {}
@@ -115,16 +222,16 @@ servers:
       # -- Type of service.
       type: ClusterIP
   proxyServer:
-    # -- Annotations for the wsProxy Server components
-    annotations: {}
     # -- Enables the websocket proxy service, allowing the usage of roBrowser clients.
     enable: true
     image:
-      name: ghcr.io/filipe-souza/rathena
+      name: ghcr.io/mestre8d/rathena
       tag: wsproxy
-      imagePullPolicy: Always
+      imagePullPolicy: IfNotPresent
     # -- Number of replicas of this pod
     replicas: 1
+    # -- Container port the wsproxy listens on.
+    containerPort: 5999
     resources:
       limits:
         cpu: "1"
@@ -133,10 +240,19 @@ servers:
         cpu: "0.5"
         memory: "512Mi"
     livenessProbe:
-      # -- Delay to start probing the pod
+      tcpSocket:
+        port: wsproxy
       initialDelaySeconds: 30
-      # -- Delay between probes on the pod
       periodSeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: wsproxy
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
     service:
       annotations: {}
       labels: {}
@@ -146,17 +262,12 @@ servers:
       port: 5999
       # -- Type of service.
       type: ClusterIP
-  # -- Configures the credentials to be stored into the config files for the inter-server authentication.
-  interServer:
-    auth:
-      passwd: p1
-      userid: s1
   webServer:
-    # -- Annotations for the web Server components
-    annotations: {}
     enable: false
     # -- Number of replicas of this pod
     replicas: 1
+    # -- Container port the web-server listens on.
+    containerPort: 8888
     resources:
       limits:
         cpu: "1"
@@ -165,10 +276,19 @@ servers:
         cpu: "0.5"
         memory: "512Mi"
     livenessProbe:
-      # -- Delay to start probing the pod
+      tcpSocket:
+        port: web-server
       initialDelaySeconds: 30
-      # -- Delay between probes on the pod
       periodSeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: web-server
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
     service:
       annotations: {}
       labels: {}

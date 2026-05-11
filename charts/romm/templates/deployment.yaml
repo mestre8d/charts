@@ -2,129 +2,228 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Release.Name }}-server"
+  name: {{ include "romm.fullname" . }}
+  labels:
+    {{- include "romm.labels" . | nindent 4 }}
+    {{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-server"
+      {{- include "romm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "romm.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if not .Values.existingSecret }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      serviceAccountName: {{ include "romm.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: romm
-          livenessProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: {{ .Values.server.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.server.livenessProbe.periodSeconds }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
-          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: {{ .Values.server.containerPort }}
+              protocol: TCP
+          {{- with .Values.server.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
+            {{- with .Values.server.env.TZ }}
+            - name: TZ
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if not (kindIs "invalid" .Values.server.env.PUID) }}
+            - name: PUID
+              value: {{ .Values.server.env.PUID | quote }}
+            {{- end }}
+            {{- if not (kindIs "invalid" .Values.server.env.PGID) }}
+            - name: PGID
+              value: {{ .Values.server.env.PGID | quote }}
+            {{- end }}
+            - name: ROMM_DB_DRIVER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romm.secretName" . }}
+                  key: romm_db_driver
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "db_host"
+                  name: {{ include "romm.secretName" . }}
+                  key: db_host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romm.secretName" . }}
+                  key: db_port
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "db_name"
+                  name: {{ include "romm.secretName" . }}
+                  key: db_name
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "db_user"
+                  name: {{ include "romm.secretName" . }}
+                  key: db_user
             - name: DB_PASSWD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "db_password"
+                  name: {{ include "romm.secretName" . }}
+                  key: db_password
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romm.secretName" . }}
+                  key: redis_host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romm.secretName" . }}
+                  key: redis_port
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.redis.existingSecret }}{{ .Values.redis.existingSecret }}{{ else }}{{ include "romm.secretName" . }}{{ end }}
+                  key: {{ if .Values.redis.existingSecret }}redis-password{{ else }}redis_password{{ end }}
             - name: IGDB_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "igdb_client_id"
+                  name: {{ include "romm.secretName" . }}
+                  key: igdb_client_id
             - name: IGDB_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "igdb_client_secret"
+                  name: {{ include "romm.secretName" . }}
+                  key: igdb_client_secret
             - name: MOBYGAMES_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "moby_api_key"
+                  name: {{ include "romm.secretName" . }}
+                  key: moby_api_key
             - name: ROMM_AUTH_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "secret_key"
+                  name: {{ include "romm.secretName" . }}
+                  key: secret_key
             - name: ROMM_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "initial_username"
+                  name: {{ include "romm.secretName" . }}
+                  key: initial_username
             - name: ROMM_AUTH_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Release.Name }}-secrets"
-                  key: "initial_password"
+                  name: {{ include "romm.secretName" . }}
+                  key: initial_password
+            {{- with .Values.server.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - name: "{{ .Release.Name }}-config"
+            - name: config
               mountPath: /romm/config
-            - name: "{{ .Release.Name }}-assets"
+            - name: assets
               mountPath: /romm/assets
-            - name: "{{ .Release.Name }}-resources"
+            - name: resources
               mountPath: /romm/resources
-            - name: "{{ .Release.Name }}-library"
+            - name: library
               mountPath: /romm/library
-              {{ if and .Values.storage.library.persist (.Values.storage.library.hostPath) }}
+              {{- if .Values.storage.library.readOnly }}
               readOnly: true
-              {{ end }}
+              {{- end }}
+            {{- with .Values.server.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
-        - name: "{{ .Release.Name }}-config"
+        - name: config
           configMap:
-            name: "{{ .Release.Name }}-config"
-        - name: "{{ .Release.Name }}-resources"
-          {{ with .Values.storage.resources }}
-          {{ if .persist }}
+            name: {{ include "romm.fullname" . }}-config
+        - name: resources
+          {{- if .Values.storage.resources.persist }}
           persistentVolumeClaim:
-            claimName: "{{ $.Release.Name }}-resources"
-          {{ else }}
+            claimName: {{ include "romm.fullname" . }}-resources
+          {{- else }}
           emptyDir: {}
-          {{ end }}
-          {{ end }}
-        - name: "{{ .Release.Name }}-assets"
-          {{ with .Values.storage.assets }}
-          {{ if .persist }}
+          {{- end }}
+        - name: assets
+          {{- if .Values.storage.assets.persist }}
           persistentVolumeClaim:
-            claimName: "{{ $.Release.Name }}-assets"
-          {{ else }}
+            claimName: {{ include "romm.fullname" . }}-assets
+          {{- else }}
           emptyDir: {}
-          {{ end }}
-          {{ end }}
-        - name: "{{ .Release.Name }}-library"
-          {{ with .Values.storage.library }}
-          {{ if and .persist (.hostPath) }}
+          {{- end }}
+        - name: library
+          {{- if and .Values.storage.library.persist .Values.storage.library.hostPath }}
           hostPath:
-            path: {{ .hostPath }}
-          {{ else if and .persist (eq .hostPath "") }}
+            path: {{ .Values.storage.library.hostPath | quote }}
+          {{- else if .Values.storage.library.persist }}
           persistentVolumeClaim:
-            claimName: "{{ $.Release.Name }}-library"
-          {{ else }}
+            claimName: {{ include "romm.fullname" . }}-library
+          {{- else }}
           emptyDir: {}
-          {{ end }}
-          {{ end }}
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
+          {{- end }}
+        {{- with .Values.server.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

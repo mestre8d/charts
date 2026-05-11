@@ -1,255 +1,503 @@
+{{- /*
+rAthena deployments: login-server, char-server, map-server,
+optional web-server, optional wsproxy.
+
+Configuration is mounted at /opt/rathena/conf/import via a projected volume
+combining the ConfigMap (non-sensitive files) and the Secret (files that
+embed credentials: char_conf.txt, map_conf.txt, inter_conf.txt).
+
+char-server and map-server are stateful (per-character data, save files,
+logs); they use Recreate strategy since the PVC is RWO.
+*/ -}}
+{{- $fullName := include "rathena.fullname" . -}}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-login-server"
+  name: {{ $fullName }}-login-server
+  labels:
+    {{- include "rathena.componentLabels" (dict "context" . "component" "login-server") | nindent 4 }}
 spec:
+  replicas: {{ .Values.servers.loginServer.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
+      {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "login-server") | nindent 6 }}
   template:
     metadata:
       annotations:
-        {{- with .Values.servers.loginServer.annotations }}
-        {{- toYaml . | nindent 4 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-login-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-login-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "rathena.componentLabels" (dict "context" . "component" "login-server") | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rathena.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       containers:
         - name: login-server
-          livenessProbe:
-            tcpSocket:
-              port: 6900
-            initialDelaySeconds: {{ .Values.servers.loginServer.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.servers.loginServer.livenessProbe.periodSeconds }}
-          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
-          ports:
-            - containerPort: 6900
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           command:
             - /opt/rathena/login-server
+          ports:
+            - name: login-server
+              containerPort: {{ .Values.servers.loginServer.containerPort }}
+              protocol: TCP
+          {{- with .Values.servers.loginServer.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.loginServer.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - name: "{{ .Release.Name }}-conf-import"
+            - name: conf-import
               mountPath: /opt/rathena/conf/import
+          {{- with .Values.servers.loginServer.resources }}
           resources:
-          {{- if .Values.servers.loginServer.resources }}
-          {{- toYaml .Values.servers.loginServer.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: "{{ .Release.Name }}-conf-import"
-          configMap:
-            name: "{{ .Release.Name }}-conf-import"
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
+        - name: conf-import
+          projected:
+            sources:
+              - configMap:
+                  name: {{ $fullName }}-conf-import
+              - secret:
+                  name: {{ $fullName }}-secrets
+                  items:
+                    - key: char_conf.txt
+                      path: char_conf.txt
+                    - key: map_conf.txt
+                      path: map_conf.txt
+                    - key: inter_conf.txt
+                      path: inter_conf.txt
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-char-server"
+  name: {{ $fullName }}-char-server
+  labels:
+    {{- include "rathena.componentLabels" (dict "context" . "component" "char-server") | nindent 4 }}
 spec:
+  replicas: {{ .Values.servers.charServer.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
+      {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "char-server") | nindent 6 }}
   template:
     metadata:
       annotations:
-        {{- with .Values.servers.charServer.annotations }}
-        {{- toYaml . | nindent 4 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-char-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-char-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "rathena.componentLabels" (dict "context" . "component" "char-server") | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rathena.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       containers:
         - name: char-server
-          livenessProbe:
-            tcpSocket:
-              port: 6121
-            initialDelaySeconds: {{ .Values.servers.charServer.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.servers.charServer.livenessProbe.periodSeconds }}
-          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
-          ports:
-            - containerPort: 6121
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           command:
             - /opt/rathena/char-server
+          ports:
+            - name: char-server
+              containerPort: {{ .Values.servers.charServer.containerPort }}
+              protocol: TCP
+          {{- with .Values.servers.charServer.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.charServer.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - name: "{{ .Release.Name }}-conf-import"
+            - name: conf-import
               mountPath: /opt/rathena/conf/import
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /opt/rathena/log
+              subPath: log
+            - name: data
+              mountPath: /opt/rathena/save
+              subPath: save
+            {{- end }}
+          {{- with .Values.servers.charServer.resources }}
           resources:
-          {{- if .Values.servers.charServer.resources }}
-          {{- toYaml .Values.servers.charServer.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: "{{ .Release.Name }}-conf-import"
-          configMap:
-            name: "{{ .Release.Name }}-conf-import"
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
+        - name: conf-import
+          projected:
+            sources:
+              - configMap:
+                  name: {{ $fullName }}-conf-import
+              - secret:
+                  name: {{ $fullName }}-secrets
+                  items:
+                    - key: char_conf.txt
+                      path: char_conf.txt
+                    - key: map_conf.txt
+                      path: map_conf.txt
+                    - key: inter_conf.txt
+                      path: inter_conf.txt
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $fullName }}-char-server
+        {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-map-server"
+  name: {{ $fullName }}-map-server
+  labels:
+    {{- include "rathena.componentLabels" (dict "context" . "component" "map-server") | nindent 4 }}
 spec:
   replicas: {{ .Values.servers.mapServer.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
+      {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "map-server") | nindent 6 }}
   template:
     metadata:
       annotations:
-        {{- with .Values.servers.mapServer.annotations }}
-        {{- toYaml . | nindent 4 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-map-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-map-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "rathena.componentLabels" (dict "context" . "component" "map-server") | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rathena.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       containers:
         - name: map-server
-          livenessProbe:
-            tcpSocket:
-              port: 5121
-            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
-          ports:
-            - containerPort: 5121
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           command:
             - /opt/rathena/map-server
+          ports:
+            - name: map-server
+              containerPort: {{ .Values.servers.mapServer.containerPort }}
+              protocol: TCP
+          {{- with .Values.servers.mapServer.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.mapServer.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.mapServer.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - name: "{{ .Release.Name }}-conf-import"
+            - name: conf-import
               mountPath: /opt/rathena/conf/import
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /opt/rathena/log
+              subPath: log
+            - name: data
+              mountPath: /opt/rathena/save
+              subPath: save
+            {{- end }}
+          {{- with .Values.servers.mapServer.resources }}
           resources:
-          {{- if .Values.servers.mapServer.resources }}
-          {{- toYaml .Values.servers.mapServer.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: test
-          emptyDir: {}
-        - name: "{{ .Release.Name }}-conf-import"
-          configMap:
-            name: "{{ .Release.Name }}-conf-import"
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
+        - name: conf-import
+          projected:
+            sources:
+              - configMap:
+                  name: {{ $fullName }}-conf-import
+              - secret:
+                  name: {{ $fullName }}-secrets
+                  items:
+                    - key: char_conf.txt
+                      path: char_conf.txt
+                    - key: map_conf.txt
+                      path: map_conf.txt
+                    - key: inter_conf.txt
+                      path: inter_conf.txt
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $fullName }}-map-server
+        {{- end }}
+{{- if .Values.servers.webServer.enable }}
 ---
-{{ if .Values.servers.webServer.enable }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-web-server"
+  name: {{ $fullName }}-web-server
+  labels:
+    {{- include "rathena.componentLabels" (dict "context" . "component" "web-server") | nindent 4 }}
 spec:
-  replicas: {{ .Values.servers.mapServer.replicas }}
+  replicas: {{ .Values.servers.webServer.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
+      {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "web-server") | nindent 6 }}
   template:
     metadata:
       annotations:
-        {{- with .Values.servers.webServer.annotations }}
-        {{- toYaml . | nindent 4 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-web-server"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-web-server"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "rathena.componentLabels" (dict "context" . "component" "web-server") | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rathena.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       containers:
         - name: web-server
-          livenessProbe:
-            httpGet:
-              port: 8888
-            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
-          ports:
-            - containerPort: 8888
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           command:
             - /opt/rathena/web-server
+          ports:
+            - name: web-server
+              containerPort: {{ .Values.servers.webServer.containerPort }}
+              protocol: TCP
+          {{- with .Values.servers.webServer.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.webServer.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            - name: "{{ .Release.Name }}-conf-import"
+            - name: conf-import
               mountPath: /opt/rathena/conf/import
+          {{- with .Values.servers.webServer.resources }}
           resources:
-          {{- if .Values.servers.webServer.resources }}
-          {{- toYaml .Values.servers.webServer.resources | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: "{{ .Release.Name }}-conf-import"
-          configMap:
-            name: "{{ .Release.Name }}-conf-import"
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
-{{ end }}
+        - name: conf-import
+          projected:
+            sources:
+              - configMap:
+                  name: {{ $fullName }}-conf-import
+              - secret:
+                  name: {{ $fullName }}-secrets
+                  items:
+                    - key: char_conf.txt
+                      path: char_conf.txt
+                    - key: map_conf.txt
+                      path: map_conf.txt
+                    - key: inter_conf.txt
+                      path: inter_conf.txt
+{{- end }}
+{{- if .Values.servers.proxyServer.enable }}
 ---
-{{ if .Values.servers.proxyServer.enable }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: "{{ .Release.Name }}-wsproxy"
+  name: {{ $fullName }}-wsproxy
+  labels:
+    {{- include "rathena.componentLabels" (dict "context" . "component" "wsproxy") | nindent 4 }}
 spec:
-  replicas: {{ .Values.servers.mapServer.replicas }}
+  replicas: {{ .Values.servers.proxyServer.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
+      {{- include "rathena.componentSelectorLabels" (dict "context" . "component" "wsproxy") | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
       annotations:
-        {{- with .Values.servers.proxyServer.annotations }}
-        {{- toYaml . | nindent 4 }}
-        {{- end }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: "{{ .Release.Name }}-wsproxy"
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: "{{ .Release.Name }}-wsproxy"
-        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        {{- include "rathena.componentLabels" (dict "context" . "component" "wsproxy") | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rathena.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       containers:
         - name: wsproxy
-          livenessProbe:
-            tcpSocket:
-              port: 5999
-            initialDelaySeconds: {{ .Values.servers.mapServer.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.servers.mapServer.livenessProbe.periodSeconds }}
           image: "{{ .Values.servers.proxyServer.image.name }}:{{ .Values.servers.proxyServer.image.tag }}"
           imagePullPolicy: {{ .Values.servers.proxyServer.image.imagePullPolicy }}
-          ports:
-            - containerPort: 5999
-          resources:
-          {{- if .Values.servers.proxyServer.resources }}
-          {{- toYaml .Values.servers.proxyServer.resources | nindent 12 }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-    {{- if .Values.image.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.servers.proxyServer.image.imagePullSecrets | nindent 8 }}
-    {{- end }}
-{{ end }}
+          ports:
+            - name: wsproxy
+              containerPort: {{ .Values.servers.proxyServer.containerPort }}
+              protocol: TCP
+          {{- with .Values.servers.proxyServer.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.proxyServer.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.servers.proxyServer.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

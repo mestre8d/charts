@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "palworld.fullname" . }}-test-connection"
+  labels:
+    {{- include "palworld.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: tcp-rcon
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          echo "Testing TCP connection to RCON {{ include "palworld.serverFullname" . }}:{{ .Values.server.config.rcon.port }}"
+          nc -zv -w 5 {{ include "palworld.serverFullname" . }} {{ .Values.server.config.rcon.port }}
+          {{- if .Values.api.enabled }}
+          echo "Testing HTTP connection to API {{ include "palworld.apiFullname" . }}:{{ .Values.api.service.port }}"
+          wget --spider --timeout=5 http://{{ include "palworld.apiFullname" . }}:{{ .Values.api.service.port }}/
+          {{- end }}

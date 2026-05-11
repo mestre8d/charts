@@ -2,19 +2,37 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# This chart packs every component (webapp, server, gotenberg, MariaDB,
+# Redis) into a single Pod. The in-Pod databases use RWO PVCs, so
+# multi-replica is broken by design and replicaCount is hard-pinned to
+# 1 in the rendered Deployment regardless of this value.
 replicaCount: 1
+
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
+
+# Top-level pull secrets. Used in addition to per-component
+# `image.imagePullSecrets`. Each entry is the name of an existing
+# Secret of type kubernetes.io/dockerconfigjson in the release namespace.
+imagePullSecrets: []
+
+# ServiceAccount used by the Pod.
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  # If `create: true` and `name` is empty, defaults to the chart fullname.
+  # If `create: false` and `name` is empty, defaults to "default".
+  name: ""
 
 webapp:
   resources: {}
   annotations: {}
   labels: {}
   image:
-    registry: " ghcr.io"
-    image: "bigcapitalhq/webapp"
+    registry: "ghcr.io/mestre8d"
+    image: "webapp"
     tag: "latest"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -45,6 +63,26 @@ webapp:
     #         - bigcapital.example.com
     #       secretName: bigcapital-tls
     tls: []
+  # Container-level securityContext (overrides chart-wide `securityContext`).
+  securityContext: {}
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: http-webapp
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: http-webapp
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 
 server:
@@ -53,8 +91,8 @@ server:
   labels: {}
   secret_string: ""
   image:
-    registry: " ghcr.io"
-    image: "bigcapitalhq/server"
+    registry: "ghcr.io/mestre8d"
+    image: "server"
     tag: "latest"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -62,14 +100,31 @@ server:
     enabled: true
     type: ClusterIP
     port: 3000
+  securityContext: {}
+  livenessProbe:
+    enabled: true
+    tcpSocket:
+      port: http-server
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    tcpSocket:
+      port: http-server
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 gotenberg:
   resources: {}
   annotations: {}
   labels: {}
   image:
-    registry: " ghcr.io"
-    image: "gotenberg/gotenberg"
+    registry: "ghcr.io/mestre8d"
+    image: "gotenberg"
     tag: "7"
     pullPolicy: IfNotPresent
     imagePullSecrets: []
@@ -79,10 +134,31 @@ gotenberg:
     port: 9000
   storage:
     size: 1Gi
-    storageClass: "baltasar-iscsi"
+    # Empty string means "use the cluster default StorageClass". Set
+    # to a specific class (e.g. "standard", "gp3", "longhorn") to pin.
+    storageClass: ""
     accessMode: ReadWriteOnce
     annotations: {}
     labels: {}
+  securityContext: {}
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: http-gotenberg
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: http-gotenberg
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 database:
   # Set to false to skip rendering the in-cluster MariaDB container/PVC
@@ -92,10 +168,10 @@ database:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "mestre8d/bigcapital-docker"
+    registry: "ghcr.io/mestre8d"
+    image: "bigcapital-docker"
     tag: "mariadb-10"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     imagePullSecrets: []
   service:
     enabled: true
@@ -103,7 +179,8 @@ database:
     port: 3306
   storage:
     size: 1Gi
-    storageClass: "baltasar-iscsi"
+    # Empty string means "use the cluster default StorageClass".
+    storageClass: ""
     accessMode: ReadWriteOnce
     annotations: {}
     labels: {}
@@ -138,6 +215,23 @@ database:
     password: ""
     rootPassword: ""
     systemDbName: ""
+  securityContext: {}
+  livenessProbe:
+    enabled: true
+    tcpSocket:
+      port: tcp-database
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    tcpSocket:
+      port: tcp-database
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 redis:
   enabled: true
@@ -145,10 +239,10 @@ redis:
   annotations: {}
   labels: {}
   image:
-    registry: "ghcr.io"
-    image: "mestre8d/bigcapital-docker"
+    registry: "ghcr.io/mestre8d"
+    image: "bigcapital-docker"
     tag: "redis-6"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     imagePullSecrets: []
   service:
     enabled: true
@@ -156,10 +250,28 @@ redis:
     port: 6379
   storage:
     size: 1Gi
+    # Empty string means "use the cluster default StorageClass".
     storageClass: ""
     accessMode: ReadWriteOnce
     annotations: {}
     labels: {}
+  securityContext: {}
+  livenessProbe:
+    enabled: true
+    tcpSocket:
+      port: tcp-redis
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    enabled: true
+    tcpSocket:
+      port: tcp-redis
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -168,13 +280,30 @@ podAnnotations: {}
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# Pod-level securityContext applied to the entire Pod. Overridable
+# wholesale; the defaults below are merged into the Pod spec when this
+# map is non-empty.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+# Default container-level securityContext, used as the base for every
+# container that does not set its own `securityContext` block. We
+# intentionally leave `readOnlyRootFilesystem: false` because the
+# bundled images (especially MariaDB and Redis on first init) write
+# inside the rootfs.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -31,7 +31,10 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common labels. Note: these intentionally do NOT include
+`app.kubernetes.io/component`; callers add the per-resource component
+label themselves so the same helper can be reused across roles
+(webapp / server / gotenberg / database / redis).
 */}}
 {{- define "bigcapital.labels" -}}
 helm.sh/chart: {{ include "bigcapital.chart" . }}
@@ -43,7 +46,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels.
+
+These are emitted into BOTH `spec.selector.matchLabels` (immutable
+on Deployments) AND `spec.template.metadata.labels`, so they MUST
+be a stable, minimal set. Only `app.kubernetes.io/name` and
+`app.kubernetes.io/instance` are included; the chart version,
+helm release service, and `app.kubernetes.io/component` are
+deliberately omitted to keep upgrades safe.
 */}}
 {{- define "bigcapital.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "bigcapital.name" . }}
@@ -51,7 +61,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Create the name of the service account to use.
 */}}
 {{- define "bigcapital.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}

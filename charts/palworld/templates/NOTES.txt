@@ -1,0 +1,63 @@
+Palworld is being installed in the {{ .Release.Namespace }} namespace as release {{ .Release.Name }}.
+
+==> Game server connection
+{{- $serverSvc := include "palworld.serverFullname" . }}
+{{- if eq .Values.server.service.type "LoadBalancer" }}
+The game server is exposed via a LoadBalancer Service. After the cloud
+provider provisions the external IP, players can connect with:
+
+  IP:    kubectl --namespace {{ .Release.Namespace }} get svc {{ $serverSvc }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+  Port:  {{ .Values.server.config.port }}/UDP (game)
+         {{ .Values.server.config.query_port }}/UDP (query)
+
+{{- else if eq .Values.server.service.type "NodePort" }}
+The game server is exposed via NodePort. Get a NodePort URL with:
+
+  kubectl --namespace {{ .Release.Namespace }} get svc {{ $serverSvc }}
+
+{{- else }}
+The game server Service type is {{ .Values.server.service.type }}.
+Forward it locally with:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ $serverSvc }} {{ .Values.server.config.port }}:{{ .Values.server.config.port }}
+
+{{- end }}
+
+==> RCON access
+{{- if .Values.server.config.rcon.enable }}
+RCON is enabled on TCP port {{ .Values.server.config.rcon.port }}.
+The password is stored in the Secret {{ include "palworld.serverFullname" . }} under the key `rconPassword`.
+
+  kubectl --namespace {{ .Release.Namespace }} get secret {{ include "palworld.serverFullname" . }} \
+    -o jsonpath='{.data.rconPassword}' | base64 -d ; echo
+
+To open an RCON session via port-forward:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "palworld.serverFullname" . }} {{ .Values.server.config.rcon.port }}:{{ .Values.server.config.rcon.port }}
+
+{{- else }}
+RCON is disabled. Set `server.config.rcon.enable=true` to enable it.
+{{- end }}
+
+{{- if .Values.api.enabled }}
+
+==> Palworld RCON API
+The API Deployment is enabled. It is reachable in-cluster as:
+
+  http://{{ include "palworld.apiFullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.api.service.port }}/
+
+The bearer token is stored in the Secret {{ include "palworld.serverFullname" . }} under the key `bearerToken`:
+
+  kubectl --namespace {{ .Release.Namespace }} get secret {{ include "palworld.serverFullname" . }} \
+    -o jsonpath='{.data.bearerToken}' | base64 -d ; echo
+{{- end }}
+
+{{- if .Values.server.config.update_on_boot }}
+
+WARNING: `update_on_boot` is enabled. On the first boot SteamCMD will download
+the full Palworld dedicated server (~5+ GB), which can take many minutes.
+The startupProbe is configured with a high failureThreshold to allow this.
+Watch the logs with:
+
+  kubectl --namespace {{ .Release.Namespace }} logs -f deploy/{{ include "palworld.serverFullname" . }} -c server
+{{- end }}

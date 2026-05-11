@@ -1,30 +1,76 @@
-namespaceOverride: ""
-fullnameOverride: ""
+# Default values for voting-app.
+# This is a YAML-formatted file.
+
+# -- String to partially override the chart name. Affects label values
+# and resource names. Leave empty to use `.Chart.Name`.
 nameOverride: ""
+# -- String to fully override the generated fullname (truncated to 63 chars).
+fullnameOverride: ""
+
+# -- DNS cluster zone used to build in-cluster service hostnames.
 clusterZone: "cluster.local"
-# -- Configure the image for all the services.
-images:
-  database:
-    name: postgres
-    tag: 14
-  redis:
-    name: redis
-    tag: 7.4
-  vote:
-    name: ghcr.io/filipe-souza/example-voting-app-docker
-    tag: vote-v0.0.1
-  result:
-    name: ghcr.io/filipe-souza/example-voting-app-docker
-    tag: result-v0.0.1
-  worker:
-    name: ghcr.io/filipe-souza/example-voting-app-docker
-    tag: worker-v0.0.1
-  imagePullPolicy: Always
-  imagePullSecrets: []
-replicaCount: 1
+
+# -- Image pull secrets used by every component's Pod spec.
+# A list of `{ name: my-secret }` entries.
+imagePullSecrets: []
+
+serviceAccount:
+  # -- Whether to create a ServiceAccount for the chart.
+  create: true
+  # -- Whether the ServiceAccount token should be auto-mounted into pods.
+  automount: false
+  # -- Annotations to add to the ServiceAccount.
+  annotations: {}
+  # -- Override the ServiceAccount name. If empty and `create=true`,
+  # `voting-app.fullname` is used.
+  name: ""
+
+# -- Vote frontend (Python/Flask).
 vote:
+  # -- Number of pod replicas.
+  replicaCount: 1
+  image:
+    repository: ghcr.io/mestre8d/example-voting-app-docker
+    tag: vote-v0.0.1
+    pullPolicy: IfNotPresent
+  # -- Container port the application listens on.
+  containerPort: 80
+  # -- Extra labels added to the Service / Ingress / etc. metadata.
   labels: {}
+  # -- Extra annotations added to the workload metadata.
   annotations: {}
+  # -- Extra labels added to the pod template.
+  podLabels: {}
+  # -- Extra annotations added to the pod template.
+  podAnnotations: {}
+  # -- Resource requests/limits for the container.
+  resources: {}
+  # -- Pod-level securityContext.
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  # -- Container-level securityContext.
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
   service:
     port: 80
     type: ClusterIP
@@ -35,71 +81,200 @@ vote:
     create: false
     # -- The ingress class name
     ingressClassName: ""
-    # -- Multiple paths configuration.
-    paths: [ ]
+    # -- Multiple paths configuration. When non-empty, overrides `path`.
+    paths: []
     # -- Default path configuration
     path: "/"
+    # -- Default `pathType` for the auto-generated single path.
+    pathType: Prefix
     hostName: ""
     resourceRootUrl: ""
-    # TLS secret configuration
-    tls: { }
+    # -- TLS secret configuration. Empty map = disabled.
+    tls: {}
+
+# -- Result frontend (Node.js).
 result:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/mestre8d/example-voting-app-docker
+    tag: result-v0.0.1
+    pullPolicy: IfNotPresent
+  containerPort: 80
   labels: {}
   annotations: {}
+  podLabels: {}
+  podAnnotations: {}
+  resources: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
   service:
     port: 80
     type: ClusterIP
   ingress:
     labels: {}
     annotations: {}
-    # -- Enable/disables the creation of the Ingress
     create: false
-    # -- The ingress class name
     ingressClassName: ""
-    # -- Multiple paths configuration.
-    paths: [ ]
-    # -- Default path configuration
+    paths: []
     path: "/"
+    pathType: Prefix
     hostName: ""
     resourceRootUrl: ""
-    # TLS secret configuration
-    tls: { }
+    tls: {}
+
+# -- Background worker (.NET) that drains votes from Redis to PostgreSQL.
+# Has no inbound network port.
 worker:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/mestre8d/example-voting-app-docker
+    tag: worker-v0.0.1
+    pullPolicy: IfNotPresent
   labels: {}
   annotations: {}
-# -- PostgreSQL service configuration
+  podLabels: {}
+  podAnnotations: {}
+  resources: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  # -- Liveness probe. The worker has no HTTP/TCP endpoint, so we use
+  # an exec probe that checks the Worker process is still running.
+  livenessProbe:
+    exec:
+      command: ["/bin/sh", "-c", "pgrep -f Worker || exit 1"]
+    initialDelaySeconds: 30
+    periodSeconds: 30
+  # -- Readiness probe. Same shape as liveness; override at deploy
+  # time if you want a tighter check.
+  readinessProbe:
+    exec:
+      command: ["/bin/sh", "-c", "pgrep -f Worker || exit 1"]
+    initialDelaySeconds: 10
+    periodSeconds: 20
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- PostgreSQL backing store.
 database:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/mestre8d/postgres
+    tag: "14"
+    pullPolicy: IfNotPresent
+  containerPort: 5432
   labels: {}
   annotations: {}
+  podLabels: {}
+  podAnnotations: {}
   username: voting
-  password: "voting"
+  # -- Database password. When empty, a random 24-char value is
+  # generated AND persisted in the Secret on first install; on
+  # subsequent upgrades the value is read back via `lookup` so the
+  # password is stable across `helm upgrade`. Set explicitly to
+  # rotate.
+  password: ""
   databaseName: "voting"
   storage:
     size: 2Gi
     storageClassName: ""
+  resources: {}
+  # -- Pod-level securityContext. Postgres' alpine image runs as
+  # uid/gid 70, but the official image runs as 999 — match that
+  # so the PVC ownership lines up.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  livenessProbe:
+    exec:
+      command: ["/bin/sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+    initialDelaySeconds: 30
+    periodSeconds: 20
+  readinessProbe:
+    exec:
+      command: ["/bin/sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
   service:
     port: 5432
     type: ClusterIP
-  ingress:
-    labels: {}
-    annotations: {}
-    # -- Enable/disables the creation of the Ingress
-    create: false
-    # -- The ingress class name
-    ingressClassName: ""
-    # -- Multiple paths configuration.
-    paths: [ ]
-    # -- Default path configuration
-    path: "/"
-    hostName: ""
-    resourceRootUrl: ""
-    # TLS secret configuration
-    tls: { }
-# -- Redis service configuration
+
+# -- Redis vote queue.
 redis:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/mestre8d/redis
+    tag: "7.4"
+    pullPolicy: IfNotPresent
+  containerPort: 6379
   labels: {}
   annotations: {}
+  podLabels: {}
+  podAnnotations: {}
+  resources: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  livenessProbe:
+    exec:
+      command: ["redis-cli", "ping"]
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readinessProbe:
+    exec:
+      command: ["redis-cli", "ping"]
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
   service:
     port: 6379
     type: ClusterIP
-
