@@ -59,6 +59,9 @@ spec:
         - name: gotenberg
           image: "{{ .Values.gotenberg.image.registry }}/{{ .Values.gotenberg.image.image }}:{{ .Values.gotenberg.image.tag }}"
           imagePullPolicy: {{ .Values.gotenberg.image.pullPolicy }}
+          args:
+            - "gotenberg"
+            - "--api-port={{ .Values.gotenberg.service.port }}"
           ports:
             - name: http-gotenberg
               containerPort: {{ .Values.gotenberg.service.port }}
@@ -69,9 +72,19 @@ spec:
             - name: gotenberg-storage
               mountPath: /data
 
+        {{- if and .Values.database.enabled (not .Values.database.external.enabled) }}
         - name: database
           image: "{{ .Values.database.image.registry }}/{{ .Values.database.image.image }}:{{ .Values.database.image.tag }}"
           imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .Values.database.credentials.systemDbName | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.database.credentials.user | quote }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.database.credentials.password | quote }}
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.database.credentials.rootPassword | quote }}
           ports:
             - name: tcp-database
               containerPort: {{ .Values.database.service.port }}
@@ -81,6 +94,7 @@ spec:
           volumeMounts:
             - name: database-storage
               mountPath: /var/lib/mysql
+        {{- end }}
 
         {{- if .Values.redis.enabled }}
         - name: redis
@@ -102,9 +116,11 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "bigcapital.fullname" . }}-gotenberg
 
+        {{- if and .Values.database.enabled (not .Values.database.external.enabled) }}
         - name: database-storage
           persistentVolumeClaim:
             claimName: {{ include "bigcapital.fullname" . }}-database
+        {{- end }}
 
         {{- if .Values.redis.enabled }}
         - name: redis-storage
